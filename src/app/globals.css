@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdf2f8;
+  --foreground: #1f1f1f;
+  --pink-50: #fdf2f8;
+  --pink-100: #fce7f3;
+  --pink-200: #fbcfe8;
+  --pink-300: #f9a8d4;
+  --pink-400: #f472b6;
+  --pink-500: #ec4899;
+  --pink-600: #db2777;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --border: #f3e8f0;
+  --text-muted: #9ca3af;
+  --hover-bg: #fce7f3;
 }
 
 @theme inline {
@@ -12,15 +24,46 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #fbcfe8 transparent;
+}
+
+.kanban-column {
+  min-height: 200px;
+}
+
+.task-card {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.15);
+  transform: translateY(-1px);
+}
+
+.note-editor {
+  min-height: 120px;
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.sidebar-link {
+  transition: all 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: var(--hover-bg);
+}
+
+.sidebar-link.active {
+  background: var(--pink-100);
+  color: var(--pink-600);
+  font-weight: 600;
 }
