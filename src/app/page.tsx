@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PROJECTS, getProjectStyle } from "@/lib/constants";
 import {
   CheckCircle2,
   Clock,
@@ -6,20 +7,9 @@ import {
   StickyNote,
   Target,
   TrendingUp,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-
-const CATEGORIES = [
-  { key: "actuarial", label: "Actuarial", color: "bg-blue-100 text-blue-700" },
-  { key: "wq", label: "WQ Brain", color: "bg-purple-100 text-purple-700" },
-  { key: "sp2", label: "SP2 Study", color: "bg-green-100 text-green-700" },
-  { key: "timeless", label: "TIMELESS", color: "bg-orange-100 text-orange-700" },
-  { key: "general", label: "General", color: "bg-gray-100 text-gray-700" },
-];
-
-function getCategoryStyle(cat: string) {
-  return CATEGORIES.find((c) => c.key === cat) || CATEGORIES[4];
-}
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -59,67 +49,37 @@ export default async function Dashboard() {
   const daysLeft = getDaysUntil(sp2Deadline);
 
   const statCards = [
-    {
-      label: "Total Tasks",
-      value: totalTasks,
-      icon: ListTodo,
-      color: "text-pink-500",
-      bg: "bg-pink-50",
-    },
-    {
-      label: "Completed",
-      value: doneTasks,
-      icon: CheckCircle2,
-      color: "text-green-500",
-      bg: "bg-green-50",
-    },
-    {
-      label: "In Progress",
-      value: inProgress,
-      icon: Clock,
-      color: "text-blue-500",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "To Do",
-      value: todoTasks,
-      icon: Target,
-      color: "text-orange-500",
-      bg: "bg-orange-50",
-    },
+    { label: "Total Tasks", value: totalTasks, icon: ListTodo, color: "text-rose", bg: "bg-rose-light" },
+    { label: "Completed", value: doneTasks, icon: CheckCircle2, color: "text-green-500", bg: "bg-green-50" },
+    { label: "In Progress", value: inProgress, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
+    { label: "To Do", value: todoTasks, icon: Target, color: "text-orange-500", bg: "bg-orange-50" },
   ];
 
-  const categoryBreakdown = CATEGORIES.filter((c) => c.key !== "general").map(
-    (cat) => {
-      const catTasks = tasks.filter((t) => t.category === cat.key);
-      const done = catTasks.filter((t) => t.status === "done").length;
-      return {
-        ...cat,
-        total: catTasks.length,
-        done,
-        pct: catTasks.length > 0 ? Math.round((done / catTasks.length) * 100) : 0,
-      };
-    }
-  );
+  const projectBreakdown = PROJECTS.filter((p) => p.key !== "general").map((proj) => {
+    const projTasks = tasks.filter((t) => t.category === proj.key);
+    const done = projTasks.filter((t) => t.status === "done").length;
+    const inProg = projTasks.filter((t) => t.status === "in_progress").length;
+    return {
+      ...proj,
+      total: projTasks.length,
+      done,
+      inProg,
+      todo: projTasks.length - done - inProg,
+      pct: projTasks.length > 0 ? Math.round((done / projTasks.length) * 100) : 0,
+    };
+  });
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {getGreeting()}, Chloe!
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+        <h1 className="text-2xl font-bold text-rose-dark">{getGreeting()}, Chloe!</h1>
+        <p className="text-rose-muted text-sm mt-1">
+          {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
 
       {daysLeft > 0 && (
-        <div className="mb-6 bg-gradient-to-r from-pink-500 to-pink-400 rounded-xl p-5 text-white">
+        <div className="mb-6 bg-rose-deep rounded-xl p-5 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium opacity-90">SP2 Exam Countdown</p>
@@ -132,59 +92,36 @@ export default async function Dashboard() {
 
       <div className="grid grid-cols-4 gap-4 mb-8">
         {statCards.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-xl p-5 border border-pink-100 shadow-sm"
-          >
+          <div key={stat.label} className="bg-white rounded-xl p-5 border border-rose-border shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-500">{stat.label}</span>
+              <span className="text-sm text-rose-muted">{stat.label}</span>
               <div className={`${stat.bg} p-2 rounded-lg`}>
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+            <p className="text-2xl font-bold text-rose-dark">{stat.value}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-pink-100 shadow-sm">
+        {/* Recent Tasks */}
+        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Recent Tasks</h2>
-            <Link href="/tasks" className="text-sm text-pink-500 hover:text-pink-600">
-              View all
-            </Link>
+            <h2 className="text-lg font-semibold text-rose-dark">Recent Tasks</h2>
+            <Link href="/tasks" className="text-sm text-rose-deep hover:underline">View all</Link>
           </div>
           {recentTasks.length === 0 ? (
-            <p className="text-gray-400 text-sm">No tasks yet. Create one!</p>
+            <p className="text-rose-muted text-sm">No tasks yet. Create one!</p>
           ) : (
             <div className="space-y-3">
               {recentTasks.map((task) => {
-                const cat = getCategoryStyle(task.category);
+                const proj = getProjectStyle(task.category);
                 return (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-pink-50 transition"
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        task.status === "in_progress"
-                          ? "bg-blue-400"
-                          : task.status === "done"
-                          ? "bg-green-400"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">
-                        {task.title}
-                      </p>
-                    </div>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${cat.color}`}
-                    >
-                      {cat.label}
-                    </span>
+                  <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-rose-light transition">
+                    <div className={`w-2 h-2 rounded-full ${task.status === "in_progress" ? "bg-blue-400" : task.status === "done" ? "bg-green-400" : "bg-gray-300"}`} />
+                    <p className="text-sm font-medium text-rose-dark truncate flex-1">{task.title}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
                   </div>
                 );
               })}
@@ -192,62 +129,47 @@ export default async function Dashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-pink-100 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Category Progress
-          </h2>
+        {/* Projects Overview */}
+        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
+          <h2 className="text-lg font-semibold text-rose-dark mb-4">Projects</h2>
           <div className="space-y-4">
-            {categoryBreakdown.map((cat) => (
-              <div key={cat.key}>
+            {projectBreakdown.map((proj) => (
+              <Link key={proj.key} href={`/projects/${proj.key}`} className="block group">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${cat.color}`}>
-                    {cat.label}
-                  </span>
-                  <span className="text-gray-500">
-                    {cat.done}/{cat.total} done
-                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${proj.color}`}>{proj.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-rose-muted">{proj.done}/{proj.total} done</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-rose-muted opacity-0 group-hover:opacity-100 transition" />
+                  </div>
                 </div>
-                <div className="w-full bg-pink-100 rounded-full h-2">
-                  <div
-                    className="bg-pink-400 h-2 rounded-full transition-all"
-                    style={{ width: `${cat.pct}%` }}
-                  />
+                <div className="w-full bg-rose-light rounded-full h-2">
+                  <div className="bg-rose h-2 rounded-full transition-all" style={{ width: `${proj.pct}%` }} />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-pink-100 shadow-sm col-span-2">
+        {/* Today's Notes */}
+        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              <StickyNote className="w-5 h-5 inline mr-2 text-pink-400" />
+            <h2 className="text-lg font-semibold text-rose-dark">
+              <StickyNote className="w-5 h-5 inline mr-2 text-rose" />
               Today&apos;s Notes
             </h2>
-            <Link href="/notes" className="text-sm text-pink-500 hover:text-pink-600">
-              All notes
-            </Link>
+            <Link href="/notes" className="text-sm text-rose-deep hover:underline">All notes</Link>
           </div>
           {todayNotes.length === 0 ? (
-            <p className="text-gray-400 text-sm">
+            <p className="text-rose-muted text-sm">
               No notes for today.{" "}
-              <Link href="/notes" className="text-pink-500 hover:underline">
-                Write something!
-              </Link>
+              <Link href="/notes" className="text-rose-deep hover:underline">Write something!</Link>
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {todayNotes.map((note) => (
-                <div
-                  key={note.id}
-                  className="p-3 rounded-lg bg-pink-50 border border-pink-100"
-                >
-                  <p className="text-sm font-medium text-gray-700">
-                    {note.title || "Untitled"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                    {note.content || "Empty note"}
-                  </p>
+                <div key={note.id} className="p-3 rounded-lg bg-rose-light border border-rose-border">
+                  <p className="text-sm font-medium text-rose-dark">{note.title || "Untitled"}</p>
+                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{note.content || "Empty note"}</p>
                 </div>
               ))}
             </div>

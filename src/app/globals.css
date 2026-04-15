@@ -1,38 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdf2f8;
-  --foreground: #1f1f1f;
-  --pink-50: #fdf2f8;
-  --pink-100: #fce7f3;
-  --pink-200: #fbcfe8;
-  --pink-300: #f9a8d4;
-  --pink-400: #f472b6;
-  --pink-500: #ec4899;
-  --pink-600: #db2777;
-  --sidebar-bg: #ffffff;
-  --card-bg: #ffffff;
-  --border: #f3e8f0;
-  --text-muted: #9ca3af;
-  --hover-bg: #fce7f3;
+  --background: #faf5f5;
+  --foreground: #2a1f1f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-rose: #c8a0a0;
+  --color-rose-deep: #9b6b6b;
+  --color-rose-light: #f5eded;
+  --color-rose-bg: #faf5f5;
+  --color-rose-border: #e8dede;
+  --color-rose-muted: #7a6a6a;
+  --color-rose-dark: #2a1f1f;
+  --font-inter: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #fbcfe8 transparent;
+  scrollbar-color: #e8dede transparent;
 }
 
 .kanban-column {
@@ -44,7 +37,7 @@ body {
 }
 
 .task-card:hover {
-  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.15);
+  box-shadow: 0 4px 12px rgba(155, 107, 107, 0.12);
   transform: translateY(-1px);
 }
 
@@ -59,11 +52,11 @@ body {
 }
 
 .sidebar-link:hover {
-  background: var(--hover-bg);
+  background: #f5eded;
 }
 
 .sidebar-link.active {
-  background: var(--pink-100);
-  color: var(--pink-600);
+  background: #f5eded;
+  color: #9b6b6b;
   font-weight: 600;
 }
