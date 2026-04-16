@@ -1,188 +1,217 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useState, useCallback } from "react";
+import useSWR from "swr";
+import { useProjects } from "@/components/ProjectsProvider";
+import { fetcher } from "@/lib/fetcher";
+import { COLUMNS } from "@/lib/constants";
+import { TodaySkeleton } from "@/components/Skeleton";
 import {
-  CheckCircle2,
-  Clock,
-  ListTodo,
-  StickyNote,
-  Target,
-  TrendingUp,
-  ArrowRight,
+  CheckCircle2, Circle, Clock, StickyNote,
+  CalendarDays, ArrowRight, ChevronDown, ChevronUp,
+  TrendingUp, BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+interface Subtask { id: string; title: string; done: boolean; }
+interface Task {
+  id: string; title: string; description: string | null; status: string;
+  priority: string; category: string; dueDate: string | null;
+  subtasks: Subtask[]; _count: { comments: number };
 }
+interface Note { id: string; title: string; content: string; date: string; category: string; }
 
-function getDaysUntil(target: Date) {
-  const now = new Date();
-  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-}
+const PRI_LABEL: Record<string, string> = { high: "High", medium: "Medium", low: "Low" };
+const PRI_COLOR: Record<string, string> = { high: "#ef4444", medium: "#f59e0b", low: "#9b6b6b" };
 
-export const dynamic = "force-dynamic";
-
-export default async function Dashboard() {
-  const [tasks, todayNotes, recentTasks, projects] = await Promise.all([
-    prisma.task.findMany(),
-    prisma.note.findMany({
-      where: { date: new Date().toISOString().split("T")[0] },
-      orderBy: { updatedAt: "desc" },
-    }),
-    prisma.task.findMany({
-      where: { status: { not: "done" } },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-    }),
-    prisma.project.findMany({
-      where: { archived: false },
-      orderBy: { order: "asc" },
-    }),
-  ]);
-
-  const totalTasks = tasks.length;
-  const doneTasks = tasks.filter((t) => t.status === "done").length;
-  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
-  const todoTasks = tasks.filter((t) => t.status === "todo").length;
-
-  const sp2Deadline = new Date("2026-04-16");
-  const daysLeft = getDaysUntil(sp2Deadline);
-
-  const statCards = [
-    { label: "Total Tasks", value: totalTasks, icon: ListTodo, color: "text-rose", bg: "bg-rose-light" },
-    { label: "Completed", value: doneTasks, icon: CheckCircle2, color: "text-green-500", bg: "bg-green-50" },
-    { label: "In Progress", value: inProgress, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: "To Do", value: todoTasks, icon: Target, color: "text-orange-500", bg: "bg-orange-50" },
-  ];
-
-  const projectBreakdown = projects.map((proj) => {
-    const projTasks = tasks.filter((t) => t.category === proj.key);
-    const done = projTasks.filter((t) => t.status === "done").length;
-    return {
-      ...proj,
-      total: projTasks.length,
-      done,
-      pct: projTasks.length > 0 ? Math.round((done / projTasks.length) * 100) : 0,
-    };
+export default function HomePage() {
+  const today = new Date().toISOString().split("T")[0];
+  const { projects } = useProjects();
+  const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher);
+  const { data: notes } = useSWR<Note[]>(`/api/notes?date=${today}`, fetcher);
+  const [sections, setSections] = useState<Record<string, boolean>>({
+    overdue: true, dueToday: true, inProgress: true, highPriority: true, notes: true, stats: true,
   });
 
-  const getProjectForTask = (key: string) => projects.find((p) => p.key === key);
+  const toggle = (k: string) => setSections((p) => ({ ...p, [k]: !p[k] }));
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-rose-dark">{getGreeting()}, Chloe!</h1>
-        <p className="text-rose-muted text-sm mt-1">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-        </p>
-      </div>
+  const markDone = useCallback(async (id: string) => {
+    await fetch(`/api/tasks/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "done" }) });
+    mutateTasks();
+  }, [mutateTasks]);
 
-      {daysLeft > 0 && (
-        <div className="mb-6 bg-rose-deep rounded-xl p-5 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium opacity-90">SP2 Exam Countdown</p>
-              <p className="text-3xl font-bold mt-1">{daysLeft} days left</p>
+  const markInProgress = useCallback(async (id: string) => {
+    await fetch(`/api/tasks/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "in_progress" }) });
+    mutateTasks();
+  }, [mutateTasks]);
+
+  const toggleSub = useCallback(async (id: string, done: boolean) => {
+    await fetch(`/api/subtasks/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: !done }) });
+    mutateTasks();
+  }, [mutateTasks]);
+
+  if (!tasks) return <TodaySkeleton />;
+
+  const active = tasks.filter((t) => t.status !== "done");
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const pct = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+
+  const overdue = active.filter((t) => t.dueDate && t.dueDate.split("T")[0] < today);
+  const dueToday = active.filter((t) => t.dueDate && t.dueDate.startsWith(today));
+  const inProg = active.filter((t) => t.status === "in_progress" && !overdue.includes(t) && !dueToday.includes(t));
+  const highP = active.filter((t) => t.priority === "high" && !overdue.includes(t) && !dueToday.includes(t) && !inProg.includes(t));
+
+  const sp2Days = Math.ceil((new Date("2026-04-16").getTime() - Date.now()) / 86400000);
+  const getProj = (k: string) => projects.find((p) => p.key === k);
+
+  function TaskRow({ task }: { task: Task }) {
+    const proj = getProj(task.category);
+    const [showSubs, setShowSubs] = useState(false);
+    const doneS = task.subtasks.filter((s) => s.done).length;
+    const totalS = task.subtasks.length;
+    return (
+      <div>
+        <div className="flex items-start gap-3 py-3 px-4 hover:bg-rose-light transition rounded-lg">
+          <button onClick={() => markDone(task.id)} className="mt-0.5 flex-shrink-0 group" title="Mark done">
+            {task.status === "in_progress" ? <Clock className="w-[18px] h-[18px] text-blue-500 group-hover:text-green-500 transition" /> : <Circle className="w-[18px] h-[18px] text-rose-border group-hover:text-green-500 transition" />}
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-rose-dark">{task.title}</p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {proj && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>{proj.name}</span>}
+              <span className="text-xs" style={{ color: PRI_COLOR[task.priority] }}>{PRI_LABEL[task.priority]}</span>
+              {totalS > 0 && <button onClick={() => setShowSubs(!showSubs)} className="text-xs text-rose-muted flex items-center gap-1 hover:text-rose-deep"><CheckCircle2 className="w-3 h-3" /> {doneS}/{totalS}</button>}
             </div>
-            <TrendingUp className="w-10 h-10 opacity-70" />
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {task.status !== "in_progress" && <button onClick={() => markInProgress(task.id)} className="text-xs text-rose-muted hover:text-blue-500 transition px-2 py-1 rounded hover:bg-blue-50">Start</button>}
+            {task.dueDate && <span className="text-xs text-rose-muted">{new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
           </div>
         </div>
-      )}
-
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-5 border border-rose-border shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-rose-muted">{stat.label}</span>
-              <div className={`${stat.bg} p-2 rounded-lg`}>
-                <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-rose-dark">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-rose-dark">Recent Tasks</h2>
-            <Link href="/tasks" className="text-sm text-rose-deep hover:underline">View all</Link>
-          </div>
-          {recentTasks.length === 0 ? (
-            <p className="text-rose-muted text-sm">No tasks yet. Create one!</p>
-          ) : (
-            <div className="space-y-3">
-              {recentTasks.map((task) => {
-                const proj = getProjectForTask(task.category);
-                return (
-                  <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-rose-light transition">
-                    <div className={`w-2 h-2 rounded-full ${task.status === "in_progress" ? "bg-blue-400" : task.status === "done" ? "bg-green-400" : "bg-gray-300"}`} />
-                    <p className="text-sm font-medium text-rose-dark truncate flex-1">{task.title}</p>
-                    {proj && (
-                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>
-                        {proj.name}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-rose-dark">Projects</h2>
-            <Link href="/settings" className="text-sm text-rose-deep hover:underline">Manage</Link>
-          </div>
-          <div className="space-y-4">
-            {projectBreakdown.map((proj) => (
-              <Link key={proj.key} href={`/projects/${proj.key}`} className="block group">
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>
-                    {proj.name}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-rose-muted">{proj.done}/{proj.total} done</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-rose-muted opacity-0 group-hover:opacity-100 transition" />
-                  </div>
-                </div>
-                <div className="w-full bg-rose-light rounded-full h-2">
-                  <div className="h-2 rounded-full transition-all" style={{ width: `${proj.pct}%`, backgroundColor: proj.color }} />
-                </div>
-              </Link>
+        {showSubs && totalS > 0 && (
+          <div className="ml-10 mb-2 space-y-1">
+            {task.subtasks.map((s) => (
+              <button key={s.id} onClick={() => toggleSub(s.id, s.done)} className="flex items-center gap-2 w-full text-left py-1 px-2 rounded hover:bg-rose-light transition">
+                {s.done ? <CheckCircle2 className="w-3.5 h-3.5 text-rose-deep" /> : <Circle className="w-3.5 h-3.5 text-rose-border" />}
+                <span className={`text-xs ${s.done ? "line-through text-rose-muted" : "text-rose-dark"}`}>{s.title}</span>
+              </button>
             ))}
           </div>
-        </div>
+        )}
+      </div>
+    );
+  }
 
-        <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-rose-dark">
-              <StickyNote className="w-5 h-5 inline mr-2 text-rose" />
-              Today&apos;s Notes
-            </h2>
-            <Link href="/notes" className="text-sm text-rose-deep hover:underline">All notes</Link>
+  function Section({ id, title, count, color, items, border }: { id: string; title: string; count: number; color: string; items: Task[]; border?: string }) {
+    if (items.length === 0) return null;
+    return (
+      <section className="mb-6">
+        <button onClick={() => toggle(id)} className="flex items-center gap-2 mb-3 w-full text-left">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color }}>{title} ({count})</h2>
+          {sections[id] ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+        </button>
+        {sections[id] && <div className={`bg-white rounded-xl border shadow-sm divide-y divide-rose-border ${border || "border-rose-border"}`}>{items.map((t) => <TaskRow key={t.id} task={t} />)}</div>}
+      </section>
+    );
+  }
+
+  const todayNotes = notes || [];
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-rose-dark">
+            {(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; })()}, Chloe!
+          </h1>
+          <p className="text-rose-muted text-sm mt-1 flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" />
+            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
+        </div>
+        <Link href="/overview" className="flex items-center gap-1 text-sm text-rose-deep hover:underline">
+          <BarChart3 className="w-4 h-4" /> Stats
+        </Link>
+      </div>
+
+      {/* SP2 + Progress */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {sp2Days > 0 && (
+          <div className="bg-rose-deep rounded-xl p-4 text-white">
+            <p className="text-xs font-medium opacity-80">SP2 Exam</p>
+            <p className="text-2xl font-bold">{sp2Days} days</p>
           </div>
-          {todayNotes.length === 0 ? (
-            <p className="text-rose-muted text-sm">
-              No notes for today.{" "}
-              <Link href="/notes" className="text-rose-deep hover:underline">Write something!</Link>
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {todayNotes.map((note) => (
-                <div key={note.id} className="p-3 rounded-lg bg-rose-light border border-rose-border">
-                  <p className="text-sm font-medium text-rose-dark">{note.title || "Untitled"}</p>
-                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{note.content.replace(/<[^>]*>/g, " ").trim() || "Empty note"}</p>
-                </div>
-              ))}
-            </div>
-          )}
+        )}
+        <div className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-rose-dark">Progress</span>
+            <span className="text-xs text-rose-muted">{doneCount}/{tasks.length}</span>
+          </div>
+          <div className="w-full bg-rose-light rounded-full h-2.5">
+            <div className="bg-rose-deep h-2.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+          </div>
         </div>
       </div>
+
+      {/* Task Sections */}
+      <Section id="overdue" title="Overdue" count={overdue.length} color="#ef4444" items={overdue} border="border-red-200" />
+      <Section id="dueToday" title="Due Today" count={dueToday.length} color="#9b6b6b" items={dueToday} />
+      {dueToday.length === 0 && overdue.length === 0 && <div className="bg-white rounded-xl border border-rose-border shadow-sm p-5 text-center text-sm text-rose-muted mb-6">No tasks due today</div>}
+      <Section id="inProgress" title="In Progress" count={inProg.length} color="#3b82f6" items={inProg} />
+      <Section id="highPriority" title="High Priority" count={highP.length} color="#ef4444" items={highP} />
+
+      {/* Notes */}
+      <section className="mb-6">
+        <button onClick={() => toggle("notes")} className="flex items-center gap-2 mb-3 w-full text-left">
+          <StickyNote className="w-4 h-4 text-rose" />
+          <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Today&apos;s Notes ({todayNotes.length})</h2>
+          {sections.notes ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+          <Link href="/notes" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
+        </button>
+        {sections.notes && (todayNotes.length === 0
+          ? <div className="bg-white rounded-xl border border-rose-border shadow-sm p-5 text-center text-sm text-rose-muted">No notes for today. <Link href="/notes" className="text-rose-deep hover:underline">Write one</Link></div>
+          : <div className="space-y-3">{todayNotes.map((n) => { const p = getProj(n.category); const plain = n.content.replace(/<[^>]*>/g, " ").trim(); return (
+            <div key={n.id} className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-semibold text-rose-dark">{n.title || "Untitled"}</h3>
+                {p && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${p.color}18`, color: p.color }}>{p.name}</span>}
+              </div>
+              {plain && <p className="text-xs text-rose-muted line-clamp-2">{plain}</p>}
+            </div>); })}</div>
+        )}
+      </section>
+
+      {/* Project Cards */}
+      <section>
+        <button onClick={() => toggle("stats")} className="flex items-center gap-2 mb-3 w-full text-left">
+          <TrendingUp className="w-4 h-4 text-rose" />
+          <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Projects</h2>
+          {sections.stats ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+        </button>
+        {sections.stats && (
+          <div className="grid grid-cols-2 gap-4">
+            {projects.map((p) => {
+              const pTasks = tasks.filter((t) => t.category === p.key);
+              const pDone = pTasks.filter((t) => t.status === "done").length;
+              const pPct = pTasks.length > 0 ? Math.round((pDone / pTasks.length) * 100) : 0;
+              return (
+                <Link key={p.key} href={`/projects/${p.key}`} className="bg-white rounded-xl border border-rose-border shadow-sm p-4 hover:border-rose transition">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
+                    <span className="text-sm font-medium text-rose-dark">{p.name}</span>
+                    <span className="text-xs text-rose-muted ml-auto">{pDone}/{pTasks.length}</span>
+                  </div>
+                  <div className="w-full bg-rose-light rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full transition-all" style={{ width: `${pPct}%`, backgroundColor: p.color }} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

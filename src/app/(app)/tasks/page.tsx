@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
+import useSWR from "swr";
 import { COLUMNS, PRIORITIES, getProjectBadgeStyle } from "@/lib/constants";
 import { useProjects } from "@/components/ProjectsProvider";
+import { fetcher } from "@/lib/fetcher";
 import { Plus, Trash2, GripVertical, ChevronDown, X, LayoutGrid, List, CheckSquare, MessageSquare } from "lucide-react";
 import TaskDetailPanel from "@/components/TaskDetailPanel";
+import { TasksSkeleton } from "@/components/Skeleton";
 
 interface Subtask {
   id: string;
@@ -27,7 +30,7 @@ interface Task {
 
 export default function TasksPage() {
   const { projects } = useProjects();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { data: tasks, mutate: fetchTasks } = useSWR<Task[]>("/api/tasks", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [filterProject, setFilterProject] = useState("all");
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
@@ -41,12 +44,7 @@ export default function TasksPage() {
     dueDate: "",
   });
 
-  const fetchTasks = useCallback(async () => {
-    const res = await fetch("/api/tasks");
-    setTasks(await res.json());
-  }, []);
-
-  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  if (!tasks) return <TasksSkeleton />;
 
   const createTask = async () => {
     if (!form.title.trim()) return;

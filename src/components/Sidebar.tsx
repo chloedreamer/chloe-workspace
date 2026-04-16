@@ -7,6 +7,7 @@ import {
   KanbanSquare,
   StickyNote,
   Calendar,
+  CalendarDays,
   Settings,
   Sparkles,
   FolderOpen,
@@ -16,10 +17,11 @@ import { useProjects } from "@/components/ProjectsProvider";
 import { useState } from "react";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/", label: "Today", icon: CalendarDays },
   { href: "/tasks", label: "All Tasks", icon: KanbanSquare },
   { href: "/notes", label: "Notes", icon: StickyNote },
   { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/overview", label: "Overview", icon: LayoutDashboard },
 ];
 
 export default function Sidebar() {
