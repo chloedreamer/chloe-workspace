@@ -8,16 +8,36 @@ datasource db {
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String?
-  status      String   @default("todo")
-  priority    String   @default("medium")
-  category    String   @default("general")
-  order       Int      @default(0)
+  status      String     @default("todo")
+  priority    String     @default("medium")
+  category    String     @default("general")
+  order       Int        @default(0)
   dueDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  subtasks    Subtask[]
+  comments    Comment[]
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  title     String
+  done      Boolean  @default(false)
+  order     Int      @default(0)
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model Note {

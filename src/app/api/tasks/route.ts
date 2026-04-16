@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   const tasks = await prisma.task.findMany({
+    include: {
+      subtasks: { orderBy: { order: "asc" } },
+      _count: { select: { comments: true } },
+    },
     orderBy: [{ order: "asc" }, { createdAt: "desc" }],
   });
   return NextResponse.json(tasks);
@@ -19,6 +23,10 @@ export async function POST(req: NextRequest) {
       category: body.category || "general",
       order: body.order || 0,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
+    },
+    include: {
+      subtasks: true,
+      _count: { select: { comments: true } },
     },
   });
   return NextResponse.json(task, { status: 201 });

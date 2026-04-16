@@ -1,6 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      subtasks: { orderBy: { order: "asc" } },
+      comments: { orderBy: { createdAt: "desc" } },
+    },
+  });
+  if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(task);
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,7 +34,14 @@ export async function PATCH(
   if (body.dueDate !== undefined)
     data.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 
-  const task = await prisma.task.update({ where: { id }, data });
+  const task = await prisma.task.update({
+    where: { id },
+    data,
+    include: {
+      subtasks: { orderBy: { order: "asc" } },
+      comments: { orderBy: { createdAt: "desc" } },
+    },
+  });
   return NextResponse.json(task);
 }
 

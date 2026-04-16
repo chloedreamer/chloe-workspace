@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { PROJECTS } from "@/lib/constants";
 import { Plus, Trash2, Pin, PinOff, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import RichEditor from "@/components/RichEditor";
 
 interface Note {
   id: string;
@@ -18,6 +19,10 @@ interface Note {
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export default function NotesPage() {
@@ -73,11 +78,11 @@ export default function NotesPage() {
   };
 
   const filteredNotes = searchQuery
-    ? notes.filter((n) => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? notes.filter((n) => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || stripHtml(n.content).toLowerCase().includes(searchQuery.toLowerCase()))
     : notes;
 
   return (
-    <div className="max-w-7xl mx-auto flex gap-6 h-[calc(100vh-4rem)]">
+    <div className="max-w-7xl mx-auto flex gap-6 h-[calc(100vh-8rem)]">
       {/* Notes List */}
       <div className="w-80 flex-shrink-0 flex flex-col">
         <div className="flex items-center justify-between mb-4">
@@ -88,18 +93,11 @@ export default function NotesPage() {
         </div>
 
         <div className="flex items-center gap-2 mb-3">
-          <button onClick={() => navigateDate(-1)} className="p-1 rounded hover:bg-rose-light text-rose-muted">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowAllDates(!showAllDates)}
-            className={`flex-1 text-center text-sm py-1.5 rounded-lg border transition ${showAllDates ? "bg-rose-light border-rose text-rose-deep" : "border-rose-border text-rose-dark hover:bg-rose-light"}`}
-          >
+          <button onClick={() => navigateDate(-1)} className="p-1 rounded hover:bg-rose-light text-rose-muted"><ChevronLeft className="w-4 h-4" /></button>
+          <button onClick={() => setShowAllDates(!showAllDates)} className={`flex-1 text-center text-sm py-1.5 rounded-lg border transition ${showAllDates ? "bg-rose-light border-rose text-rose-deep" : "border-rose-border text-rose-dark hover:bg-rose-light"}`}>
             {showAllDates ? "All dates" : formatDate(selectedDate)}
           </button>
-          <button onClick={() => navigateDate(1)} className="p-1 rounded hover:bg-rose-light text-rose-muted">
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <button onClick={() => navigateDate(1)} className="p-1 rounded hover:bg-rose-light text-rose-muted"><ChevronRight className="w-4 h-4" /></button>
         </div>
 
         <div className="relative mb-3">
@@ -110,24 +108,19 @@ export default function NotesPage() {
         <div className="flex-1 overflow-y-auto space-y-2">
           {filteredNotes.length === 0 ? (
             <div className="text-center py-8 text-rose-muted text-sm">
-              No notes for this date.
-              <br />
+              No notes for this date.<br />
               <button onClick={createNote} className="text-rose-deep hover:underline mt-2 inline-block">Create one</button>
             </div>
           ) : (
             filteredNotes.map((note) => {
               const proj = PROJECTS.find((p) => p.key === note.category) || PROJECTS[4];
               return (
-                <div
-                  key={note.id}
-                  onClick={() => setSelectedNote(note)}
-                  className={`p-3 rounded-lg border cursor-pointer transition ${selectedNote?.id === note.id ? "border-rose bg-rose-light" : "border-rose-border bg-white hover:border-rose"}`}
-                >
+                <div key={note.id} onClick={() => setSelectedNote(note)} className={`p-3 rounded-lg border cursor-pointer transition ${selectedNote?.id === note.id ? "border-rose bg-rose-light" : "border-rose-border bg-white hover:border-rose"}`}>
                   <div className="flex items-center gap-2">
                     {note.pinned && <Pin className="w-3 h-3 text-rose-deep" />}
                     <p className="text-sm font-medium text-rose-dark truncate">{note.title || "Untitled"}</p>
                   </div>
-                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{note.content || "Empty note"}</p>
+                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{stripHtml(note.content) || "Empty note"}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
                     {showAllDates && <span className="text-xs text-rose-muted">{note.date}</span>}
@@ -140,7 +133,7 @@ export default function NotesPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 bg-white rounded-xl border border-rose-border shadow-sm flex flex-col">
+      <div className="flex-1 bg-white rounded-xl border border-rose-border shadow-sm flex flex-col overflow-hidden">
         {selectedNote ? (
           <>
             <div className="flex items-center justify-between p-4 border-b border-rose-border">
@@ -153,11 +146,7 @@ export default function NotesPage() {
                 className="text-lg font-semibold text-rose-dark bg-transparent outline-none flex-1"
               />
               <div className="flex items-center gap-2">
-                <select
-                  value={selectedNote.category}
-                  onChange={(e) => { const c = e.target.value; setSelectedNote({ ...selectedNote, category: c }); updateNote(selectedNote.id, { category: c }); }}
-                  className="text-xs border border-rose-border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose"
-                >
+                <select value={selectedNote.category} onChange={(e) => { const c = e.target.value; setSelectedNote({ ...selectedNote, category: c }); updateNote(selectedNote.id, { category: c }); }} className="text-xs border border-rose-border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose">
                   {PROJECTS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
                 </select>
                 <button onClick={() => togglePin(selectedNote)} className={`p-1.5 rounded-lg transition ${selectedNote.pinned ? "text-rose-deep bg-rose-light" : "text-rose-muted hover:text-rose-deep hover:bg-rose-light"}`}>
@@ -168,15 +157,11 @@ export default function NotesPage() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 p-4">
-              <textarea
-                value={selectedNote.content}
-                onChange={(e) => setSelectedNote({ ...selectedNote, content: e.target.value })}
-                onBlur={() => updateNote(selectedNote.id, { content: selectedNote.content })}
-                placeholder="Start writing..."
-                className="note-editor w-full h-full border-0 resize-none text-sm text-rose-dark leading-relaxed focus:outline-none"
-              />
-            </div>
+            <RichEditor
+              content={selectedNote.content}
+              onChange={(html) => setSelectedNote({ ...selectedNote, content: html })}
+              onBlur={() => updateNote(selectedNote.id, { content: selectedNote.content })}
+            />
             <div className="px-4 py-2 border-t border-rose-border text-xs text-rose-muted">
               Last updated: {new Date(selectedNote.updatedAt).toLocaleString()}
             </div>
