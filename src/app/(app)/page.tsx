@@ -12,6 +12,7 @@ import {
   TrendingUp, BarChart3,
 } from "lucide-react";
 import Link from "next/link";
+import QuoteCard from "@/components/QuoteCard";
 
 interface Subtask { id: string; title: string; done: boolean; }
 interface Task {
@@ -135,6 +136,9 @@ export default function HomePage() {
           <BarChart3 className="w-4 h-4" /> Stats
         </Link>
       </div>
+
+      {/* Daily Quote */}
+      <QuoteCard />
 
       {/* SP2 + Progress */}
       <div className="grid grid-cols-2 gap-4 mb-6">

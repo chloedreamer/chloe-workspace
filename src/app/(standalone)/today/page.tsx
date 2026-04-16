@@ -6,6 +6,8 @@ import {
   CalendarDays, ArrowRight, ExternalLink, ChevronDown, ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
+import { getTodayQuote } from "@/lib/quotes";
+import { Quote, BookOpen } from "lucide-react";
 
 interface Subtask { id: string; title: string; done: boolean; }
 interface Task {
@@ -121,6 +123,19 @@ export default function TodayPage() {
             {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
+
+        {/* Daily Quote */}
+        {(() => { const q = getTodayQuote(); return (
+          <div className="bg-white rounded-xl border border-[#e8dede] shadow-sm p-5 mb-6 relative overflow-hidden">
+            <Quote className="absolute top-3 right-3 w-8 h-8 text-[#e8dede]/50" />
+            <p className="text-sm text-[#2a1f1f] leading-relaxed italic pr-8">&ldquo;{q.text}&rdquo;</p>
+            <div className="flex items-center gap-2 mt-3">
+              <BookOpen className="w-3.5 h-3.5 text-[#7a6a6a]" />
+              <span className="text-xs text-[#9b6b6b] font-medium">{q.author}</span>
+              <span className="text-xs text-[#7a6a6a]">— {q.source}</span>
+            </div>
+          </div>
+        ); })()}
 
         {/* Progress */}
         <div className="bg-white rounded-xl border border-[#e8dede] shadow-sm p-5 mb-8">
