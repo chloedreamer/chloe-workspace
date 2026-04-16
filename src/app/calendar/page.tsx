@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { PROJECTS } from "@/lib/constants";
+import { useProjects } from "@/components/ProjectsProvider";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Task {
@@ -23,6 +23,7 @@ export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { projects } = useProjects();
 
   const fetchData = useCallback(async () => {
     const [t, n] = await Promise.all([fetch("/api/tasks"), fetch("/api/notes")]);
@@ -90,8 +91,8 @@ export default function CalendarPage() {
                 <div className={`text-sm font-medium mb-1 w-7 h-7 flex items-center justify-center rounded-full ${isToday ? "bg-rose-deep text-white" : "text-rose-dark"}`}>{day}</div>
                 <div className="space-y-1">
                   {dayTasks.slice(0, 2).map((t) => {
-                    const proj = PROJECTS.find((p) => p.key === t.category);
-                    return <div key={t.id} className={`text-xs px-1.5 py-0.5 rounded truncate ${proj?.color || "bg-gray-100 text-gray-700"}`}>{t.title}</div>;
+                    const proj = projects.find((p) => p.key === t.category);
+                    return <div key={t.id} className="text-xs px-1.5 py-0.5 rounded truncate" style={proj ? { backgroundColor: `${proj.color}18`, color: proj.color } : { backgroundColor: "#f3f4f6", color: "#374151" }}>{t.title}</div>;
                   })}
                   {dayNotes.length > 0 && <div className="text-xs px-1.5 py-0.5 rounded bg-rose-light text-rose-deep truncate">{dayNotes.length} note{dayNotes.length > 1 ? "s" : ""}</div>}
                   {dayTasks.length > 2 && <div className="text-xs text-rose-muted">+{dayTasks.length - 2} more</div>}

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { PROJECTS, getProjectStyle } from "@/lib/constants";
 import {
   CheckCircle2,
   Clock,
@@ -20,14 +19,13 @@ function getGreeting() {
 
 function getDaysUntil(target: Date) {
   const now = new Date();
-  const diff = target.getTime() - now.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const [tasks, todayNotes, recentTasks] = await Promise.all([
+  const [tasks, todayNotes, recentTasks, projects] = await Promise.all([
     prisma.task.findMany(),
     prisma.note.findMany({
       where: { date: new Date().toISOString().split("T")[0] },
@@ -37,6 +35,10 @@ export default async function Dashboard() {
       where: { status: { not: "done" } },
       orderBy: { updatedAt: "desc" },
       take: 5,
+    }),
+    prisma.project.findMany({
+      where: { archived: false },
+      orderBy: { order: "asc" },
     }),
   ]);
 
@@ -55,19 +57,18 @@ export default async function Dashboard() {
     { label: "To Do", value: todoTasks, icon: Target, color: "text-orange-500", bg: "bg-orange-50" },
   ];
 
-  const projectBreakdown = PROJECTS.filter((p) => p.key !== "general").map((proj) => {
+  const projectBreakdown = projects.map((proj) => {
     const projTasks = tasks.filter((t) => t.category === proj.key);
     const done = projTasks.filter((t) => t.status === "done").length;
-    const inProg = projTasks.filter((t) => t.status === "in_progress").length;
     return {
       ...proj,
       total: projTasks.length,
       done,
-      inProg,
-      todo: projTasks.length - done - inProg,
       pct: projTasks.length > 0 ? Math.round((done / projTasks.length) * 100) : 0,
     };
   });
+
+  const getProjectForTask = (key: string) => projects.find((p) => p.key === key);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -105,7 +106,6 @@ export default async function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* Recent Tasks */}
         <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-rose-dark">Recent Tasks</h2>
@@ -116,12 +116,16 @@ export default async function Dashboard() {
           ) : (
             <div className="space-y-3">
               {recentTasks.map((task) => {
-                const proj = getProjectStyle(task.category);
+                const proj = getProjectForTask(task.category);
                 return (
                   <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-rose-light transition">
                     <div className={`w-2 h-2 rounded-full ${task.status === "in_progress" ? "bg-blue-400" : task.status === "done" ? "bg-green-400" : "bg-gray-300"}`} />
                     <p className="text-sm font-medium text-rose-dark truncate flex-1">{task.title}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
+                    {proj && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>
+                        {proj.name}
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -129,28 +133,31 @@ export default async function Dashboard() {
           )}
         </div>
 
-        {/* Projects Overview */}
         <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm">
-          <h2 className="text-lg font-semibold text-rose-dark mb-4">Projects</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-rose-dark">Projects</h2>
+            <Link href="/settings" className="text-sm text-rose-deep hover:underline">Manage</Link>
+          </div>
           <div className="space-y-4">
             {projectBreakdown.map((proj) => (
               <Link key={proj.key} href={`/projects/${proj.key}`} className="block group">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${proj.color}`}>{proj.label}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>
+                    {proj.name}
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="text-rose-muted">{proj.done}/{proj.total} done</span>
                     <ArrowRight className="w-3.5 h-3.5 text-rose-muted opacity-0 group-hover:opacity-100 transition" />
                   </div>
                 </div>
                 <div className="w-full bg-rose-light rounded-full h-2">
-                  <div className="bg-rose h-2 rounded-full transition-all" style={{ width: `${proj.pct}%` }} />
+                  <div className="h-2 rounded-full transition-all" style={{ width: `${proj.pct}%`, backgroundColor: proj.color }} />
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Today's Notes */}
         <div className="bg-white rounded-xl p-6 border border-rose-border shadow-sm col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-rose-dark">
@@ -169,7 +176,7 @@ export default async function Dashboard() {
               {todayNotes.map((note) => (
                 <div key={note.id} className="p-3 rounded-lg bg-rose-light border border-rose-border">
                   <p className="text-sm font-medium text-rose-dark">{note.title || "Untitled"}</p>
-                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{note.content || "Empty note"}</p>
+                  <p className="text-xs text-rose-muted mt-1 line-clamp-2">{note.content.replace(/<[^>]*>/g, " ").trim() || "Empty note"}</p>
                 </div>
               ))}
             </div>

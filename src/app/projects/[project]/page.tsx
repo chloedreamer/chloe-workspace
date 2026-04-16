@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { COLUMNS, PRIORITIES, getProjectStyle } from "@/lib/constants";
+import { COLUMNS, PRIORITIES, getProjectBadgeStyle } from "@/lib/constants";
+import { useProjects } from "@/components/ProjectsProvider";
 import { Plus, Trash2, GripVertical, X, ArrowLeft, LayoutGrid, List, CheckSquare, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import TaskDetailPanel from "@/components/TaskDetailPanel";
@@ -25,7 +26,8 @@ interface Task {
 export default function ProjectPage() {
   const params = useParams();
   const projectKey = params.project as string;
-  const project = getProjectStyle(projectKey);
+  const { projects: allProjects } = useProjects();
+  const project = allProjects.find((p) => p.key === projectKey);
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -76,11 +78,11 @@ export default function ProjectPage() {
         <Link href="/" className="p-2 rounded-lg hover:bg-rose-light text-rose-muted transition"><ArrowLeft className="w-5 h-5" /></Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${project.color}`}>{project.label}</span>
+            {project && <span className="px-3 py-1 rounded-full text-sm font-medium" style={getProjectBadgeStyle(project.color)}>{project.name}</span>}
             <span className="text-sm text-rose-muted">{doneTasks}/{totalTasks} tasks done ({pct}%)</span>
           </div>
           <div className="w-full bg-rose-light rounded-full h-1.5 mt-2">
-            <div className="bg-rose h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: project?.color || "#c8a0a0" }} />
           </div>
         </div>
         <div className="flex items-center bg-white border border-rose-border rounded-lg overflow-hidden">

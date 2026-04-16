@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, X, KanbanSquare, StickyNote } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getProjectStyle } from "@/lib/constants";
+import { useProjects } from "@/components/ProjectsProvider";
 
 interface SearchTask {
   id: string;
@@ -26,6 +26,7 @@ export default function GlobalSearch() {
   const [notes, setNotes] = useState<SearchNote[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { projects } = useProjects();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -91,12 +92,12 @@ export default function GlobalSearch() {
               <div className="mb-2">
                 <p className="text-xs font-semibold text-rose-muted px-2 py-1 uppercase tracking-wider">Tasks</p>
                 {tasks.map((t) => {
-                  const proj = getProjectStyle(t.category);
+                  const proj = projects.find((p) => p.key === t.category);
                   return (
                     <button key={t.id} onClick={() => { router.push(`/tasks?open=${t.id}`); close(); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-rose-light transition">
                       <KanbanSquare className="w-4 h-4 text-rose-muted flex-shrink-0" />
                       <span className="text-sm text-rose-dark flex-1 truncate">{t.title}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
+                      {proj && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>{proj.name}</span>}
                     </button>
                   );
                 })}

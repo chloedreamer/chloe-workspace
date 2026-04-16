@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { PROJECTS } from "@/lib/constants";
+import { useProjects } from "@/components/ProjectsProvider";
 import { Plus, Trash2, Pin, PinOff, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import RichEditor from "@/components/RichEditor";
 
@@ -31,6 +31,7 @@ export default function NotesPage() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllDates, setShowAllDates] = useState(false);
+  const { projects } = useProjects();
 
   const fetchNotes = useCallback(async () => {
     const url = showAllDates ? "/api/notes" : `/api/notes?date=${selectedDate}`;
@@ -113,7 +114,7 @@ export default function NotesPage() {
             </div>
           ) : (
             filteredNotes.map((note) => {
-              const proj = PROJECTS.find((p) => p.key === note.category) || PROJECTS[4];
+              const proj = projects.find((p) => p.key === note.category);
               return (
                 <div key={note.id} onClick={() => setSelectedNote(note)} className={`p-3 rounded-lg border cursor-pointer transition ${selectedNote?.id === note.id ? "border-rose bg-rose-light" : "border-rose-border bg-white hover:border-rose"}`}>
                   <div className="flex items-center gap-2">
@@ -122,7 +123,7 @@ export default function NotesPage() {
                   </div>
                   <p className="text-xs text-rose-muted mt-1 line-clamp-2">{stripHtml(note.content) || "Empty note"}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
+                    {proj && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>{proj.name}</span>}
                     {showAllDates && <span className="text-xs text-rose-muted">{note.date}</span>}
                   </div>
                 </div>
@@ -147,7 +148,8 @@ export default function NotesPage() {
               />
               <div className="flex items-center gap-2">
                 <select value={selectedNote.category} onChange={(e) => { const c = e.target.value; setSelectedNote({ ...selectedNote, category: c }); updateNote(selectedNote.id, { category: c }); }} className="text-xs border border-rose-border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose">
-                  {PROJECTS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+                  {projects.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+                  <option value="general">General</option>
                 </select>
                 <button onClick={() => togglePin(selectedNote)} className={`p-1.5 rounded-lg transition ${selectedNote.pinned ? "text-rose-deep bg-rose-light" : "text-rose-muted hover:text-rose-deep hover:bg-rose-light"}`}>
                   {selectedNote.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}

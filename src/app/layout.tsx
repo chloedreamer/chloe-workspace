@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import GlobalSearch from "@/components/GlobalSearch";
+import ProjectsProvider from "@/components/ProjectsProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,13 +23,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex font-[family-name:var(--font-inter)]">
-        <Sidebar />
-        <main className="flex-1 ml-64 overflow-auto">
-          <div className="px-8 py-4 border-b border-rose-border bg-white/80 backdrop-blur-sm sticky top-0 z-20 flex items-center justify-end">
-            <GlobalSearch />
-          </div>
-          <div className="p-8">{children}</div>
-        </main>
+        <ProjectsProvider>
+          <Sidebar />
+          <main className="flex-1 ml-64 overflow-auto">
+            <div className="px-8 py-4 border-b border-rose-border bg-white/80 backdrop-blur-sm sticky top-0 z-20 flex items-center justify-end">
+              <GlobalSearch />
+            </div>
+            <div className="p-8">{children}</div>
+          </main>
+        </ProjectsProvider>
       </body>
     </html>
   );

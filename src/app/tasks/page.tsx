@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { PROJECTS, COLUMNS, PRIORITIES, getProjectStyle } from "@/lib/constants";
+import { COLUMNS, PRIORITIES, getProjectBadgeStyle } from "@/lib/constants";
+import { useProjects } from "@/components/ProjectsProvider";
 import { Plus, Trash2, GripVertical, ChevronDown, X, LayoutGrid, List, CheckSquare, MessageSquare } from "lucide-react";
 import TaskDetailPanel from "@/components/TaskDetailPanel";
 
@@ -25,6 +26,7 @@ interface Task {
 }
 
 export default function TasksPage() {
+  const { projects } = useProjects();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [filterProject, setFilterProject] = useState("all");
@@ -104,7 +106,7 @@ export default function TasksPage() {
           <div className="relative">
             <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="appearance-none bg-white border border-rose-border rounded-lg px-4 py-2 pr-8 text-sm text-rose-dark focus:outline-none focus:ring-2 focus:ring-rose">
               <option value="all">All Projects</option>
-              {PROJECTS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+              {projects.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-rose-muted pointer-events-none" />
           </div>
@@ -129,7 +131,7 @@ export default function TasksPage() {
                 <div>
                   <label className="text-xs text-rose-muted mb-1 block">Project</label>
                   <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose">
-                    {PROJECTS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+                    {projects.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -171,7 +173,7 @@ export default function TasksPage() {
                 </div>
                 <div className="bg-white/50 border border-t-0 rounded-b-xl p-3 space-y-3 min-h-[300px]">
                   {colTasks.map((task) => {
-                    const proj = getProjectStyle(task.category);
+                    const proj = projects.find((p) => p.key === task.category);
                     const pri = PRIORITIES.find((p) => p.key === task.priority);
                     const doneSubtasks = task.subtasks?.filter((s) => s.done).length || 0;
                     const totalSubtasks = task.subtasks?.length || 0;
@@ -188,7 +190,7 @@ export default function TasksPage() {
                           </button>
                         </div>
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
-                          <span className={`text-xs px-2 py-0.5 rounded-full border ${proj.color}`}>{proj.label}</span>
+                          {proj && <span className="text-xs px-2 py-0.5 rounded-full border" style={getProjectBadgeStyle(proj.color)}>{proj.name}</span>}
                           {pri && <span className={`text-xs ${pri.color}`}>{pri.label}</span>}
                           {totalSubtasks > 0 && (
                             <span className="text-xs text-rose-muted flex items-center gap-1">
@@ -229,7 +231,7 @@ export default function TasksPage() {
             </thead>
             <tbody>
               {filteredTasks.map((task) => {
-                const proj = getProjectStyle(task.category);
+                const proj = projects.find((p) => p.key === task.category);
                 const pri = PRIORITIES.find((p) => p.key === task.priority);
                 const col = COLUMNS.find((c) => c.key === task.status);
                 const doneSubtasks = task.subtasks?.filter((s) => s.done).length || 0;
@@ -250,7 +252,7 @@ export default function TasksPage() {
                       <span className={`text-xs ${pri?.color}`}>{pri?.label}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${proj.color}`}>{proj.label}</span>
+                      {proj && <span className="text-xs px-2 py-0.5 rounded-full" style={getProjectBadgeStyle(proj.color)}>{proj.name}</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-rose-muted">{task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-"}</span>
