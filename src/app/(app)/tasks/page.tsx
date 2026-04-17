@@ -43,17 +43,43 @@ export default function TasksPage() {
     category: "general",
     dueDate: "",
   });
+  const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
+  const [subtaskInput, setSubtaskInput] = useState("");
 
   if (!tasks) return <TasksSkeleton />;
 
+  const addSubtaskToForm = () => {
+    if (!subtaskInput.trim()) return;
+    setNewSubtasks([...newSubtasks, subtaskInput.trim()]);
+    setSubtaskInput("");
+  };
+
+  const removeSubtaskFromForm = (idx: number) => {
+    setNewSubtasks(newSubtasks.filter((_, i) => i !== idx));
+  };
+
   const createTask = async () => {
     if (!form.title.trim()) return;
-    await fetch("/api/tasks", {
+    const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+    const task = await res.json();
+    if (newSubtasks.length > 0) {
+      await Promise.all(
+        newSubtasks.map((title, i) =>
+          fetch(`/api/tasks/${task.id}/subtasks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, order: i }),
+          })
+        )
+      );
+    }
     setForm({ title: "", description: "", status: "todo", priority: "medium", category: "general", dueDate: "" });
+    setNewSubtasks([]);
+    setSubtaskInput("");
     setShowForm(false);
     fetchTasks();
   };
@@ -149,6 +175,25 @@ export default function TasksPage() {
                 <div>
                   <label className="text-xs text-rose-muted mb-1 block">Due Date</label>
                   <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose" />
+                </div>
+              </div>
+              {/* Subtasks */}
+              <div>
+                <label className="text-xs text-rose-muted mb-1 block">Subtasks</label>
+                {newSubtasks.length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {newSubtasks.map((s, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-rose-dark bg-rose-light rounded-lg px-3 py-1.5">
+                        <CheckSquare className="w-3.5 h-3.5 text-rose-muted" />
+                        <span className="flex-1">{s}</span>
+                        <button onClick={() => removeSubtaskFromForm(i)} className="text-rose-muted hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <input type="text" value={subtaskInput} onChange={(e) => setSubtaskInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubtaskToForm(); } }} placeholder="Add subtask..." className="flex-1 border border-rose-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose" />
+                  <button type="button" onClick={addSubtaskToForm} className="px-2 py-1.5 bg-rose-light text-rose-deep rounded-lg text-sm hover:bg-rose transition">+</button>
                 </div>
               </div>
               <button onClick={createTask} className="w-full bg-rose-deep text-white py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">Create Task</button>

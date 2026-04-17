@@ -12,6 +12,11 @@ export default function QuoteCard() {
       <p className="text-sm text-rose-dark leading-relaxed italic pr-8">
         &ldquo;{quote.text}&rdquo;
       </p>
+      {quote.vi && (
+        <p className="text-sm text-rose-muted leading-relaxed mt-2 pr-8">
+          {quote.vi}
+        </p>
+      )}
       <div className="flex items-center gap-2 mt-3">
         <BookOpen className="w-3.5 h-3.5 text-rose-muted" />
         <span className="text-xs text-rose-deep font-medium">{quote.author}</span>

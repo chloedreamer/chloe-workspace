@@ -26,6 +26,7 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: #e8dede transparent;
+  box-sizing: border-box;
 }
 
 .kanban-column {
@@ -68,4 +69,9 @@ body {
 
 .animate-slide-in {
   animation: slide-in 0.2s ease-out;
+}
+
+/* Consistent grid cards */
+.grid > * {
+  min-width: 0;
 }
