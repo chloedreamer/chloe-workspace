@@ -7,9 +7,9 @@ import { fetcher } from "@/lib/fetcher";
 import { COLUMNS } from "@/lib/constants";
 import { TodaySkeleton } from "@/components/Skeleton";
 import {
-  CheckCircle2, Circle, Clock, StickyNote,
+  CheckCircle2, Circle, Clock, StickyNote, CalendarHeart,
   CalendarDays, ArrowRight, ChevronDown, ChevronUp,
-  TrendingUp, BarChart3,
+  TrendingUp, BarChart3, Cake, Users, PartyPopper,
 } from "lucide-react";
 import Link from "next/link";
 import QuoteCard from "@/components/QuoteCard";
@@ -30,8 +30,9 @@ export default function HomePage() {
   const { projects } = useProjects();
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher);
   const { data: notes } = useSWR<Note[]>(`/api/notes?date=${today}`, fetcher);
+  const { data: events } = useSWR<{ id: string; title: string; date: string; time: string | null; type: string; color: string }[]>("/api/events", fetcher);
   const [sections, setSections] = useState<Record<string, boolean>>({
-    overdue: true, dueToday: true, inProgress: true, highPriority: true, notes: true, stats: true,
+    overdue: true, dueToday: true, inProgress: true, highPriority: true, events: true, notes: true, stats: true,
   });
 
   const toggle = (k: string) => setSections((p) => ({ ...p, [k]: !p[k] }));
@@ -165,6 +166,46 @@ export default function HomePage() {
       {dueToday.length === 0 && overdue.length === 0 && <div className="bg-white rounded-xl border border-rose-border shadow-sm p-5 text-center text-sm text-rose-muted mb-6">No tasks due today</div>}
       <Section id="inProgress" title="In Progress" count={inProg.length} color="#3b82f6" items={inProg} />
       <Section id="highPriority" title="High Priority" count={highP.length} color="#ef4444" items={highP} />
+
+      {/* Upcoming Events */}
+      {(() => {
+        const todayEvents = (events || []).filter((e) => e.date.startsWith(today));
+        const upcoming = (events || []).filter((e) => e.date > today).slice(0, 5);
+        const allEvts = [...todayEvents, ...upcoming];
+        if (allEvts.length === 0) return null;
+        const typeIcons: Record<string, typeof Cake> = { birthday: Cake, meeting: Users, event: PartyPopper };
+        return (
+          <section className="mb-6">
+            <button onClick={() => toggle("events")} className="flex items-center gap-2 mb-3 w-full text-left">
+              <CalendarHeart className="w-4 h-4 text-rose" />
+              <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Events ({allEvts.length})</h2>
+              {sections.events ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+              <Link href="/events" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
+            </button>
+            {sections.events && (
+              <div className="bg-white rounded-xl border border-rose-border shadow-sm divide-y divide-rose-border">
+                {allEvts.map((e) => {
+                  const Icon = typeIcons[e.type] || CalendarHeart;
+                  const d = new Date(e.date);
+                  const isToday2 = e.date.startsWith(today);
+                  return (
+                    <div key={e.id} className="flex items-center gap-3 py-3 px-4">
+                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: e.color }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-rose-dark">{e.title}</p>
+                        {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
+                      </div>
+                      <span className={`text-xs flex-shrink-0 ${isToday2 ? "text-rose-deep font-medium" : "text-rose-muted"}`}>
+                        {isToday2 ? "Today" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* Notes */}
       <section className="mb-6">

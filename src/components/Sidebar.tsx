@@ -8,6 +8,7 @@ import {
   StickyNote,
   Calendar,
   CalendarDays,
+  CalendarHeart,
   Settings,
   Sparkles,
   FolderOpen,
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/", label: "Today", icon: CalendarDays },
   { href: "/tasks", label: "All Tasks", icon: KanbanSquare },
   { href: "/notes", label: "Notes", icon: StickyNote },
+  { href: "/events", label: "Events", icon: CalendarHeart },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
 ];
