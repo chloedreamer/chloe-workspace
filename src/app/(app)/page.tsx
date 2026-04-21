@@ -150,36 +150,36 @@ export default function HomePage() {
       <Section id="inProgress" title="In Progress" count={inProg.length} color="#3b82f6" items={inProg} />
       <Section id="highPriority" title="High Priority" count={highP.length} color="#ef4444" items={highP} />
 
-      {/* Today Events */}
+      {/* Today Event */}
       {(() => {
         const todayEvents = (events || []).filter((e) => e.date.startsWith(today));
-        if (todayEvents.length === 0) return null;
         const typeIcons: Record<string, typeof Cake> = { birthday: Cake, meeting: Users, event: PartyPopper };
         return (
           <section className="mb-6">
             <button onClick={() => toggle("todayEvents")} className="flex items-center gap-2 mb-3 w-full text-left">
-              <CalendarHeart className="w-4 h-4 text-rose" />
-              <h2 className="text-sm font-medium text-rose-deep">Today Events ({todayEvents.length})</h2>
+              <div className="w-2 h-2 rounded-full bg-[#9b6b6b]" />
+              <h2 className="text-sm font-medium text-[#9b6b6b]">Today Event ({todayEvents.length})</h2>
               {sections.todayEvents ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
             </button>
-            {sections.todayEvents && (
-              <div className="card divide-y divide-rose-border">
-                {todayEvents.map((e) => {
-                  const Icon = typeIcons[e.type] || CalendarHeart;
-                  return (
-                    <div key={e.id} className="flex items-center gap-3 py-3 px-4">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${e.color}18` }}>
-                        <Icon className="w-4 h-4" style={{ color: e.color }} />
+            {sections.todayEvents && (todayEvents.length === 0
+              ? <div className="card p-5 text-center text-sm text-rose-muted">No events today</div>
+              : <div className="card divide-y divide-rose-border">
+                  {todayEvents.map((e) => {
+                    const Icon = typeIcons[e.type] || CalendarHeart;
+                    return (
+                      <div key={e.id} className="flex items-center gap-3 py-3 px-4">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${e.color}18` }}>
+                          <Icon className="w-4 h-4" style={{ color: e.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-rose-dark">{e.title}</p>
+                          {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
+                        </div>
+                        <span className="text-xs text-rose-deep font-medium flex-shrink-0">Today</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-rose-dark">{e.title}</p>
-                        {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
-                      </div>
-                      <span className="text-xs text-rose-deep font-medium flex-shrink-0">Today</span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
             )}
           </section>
         );
@@ -221,11 +221,11 @@ export default function HomePage() {
         );
       })()}
 
-      {/* Notes */}
+      {/* Today Note */}
       <section className="mb-6">
         <button onClick={() => toggle("notes")} className="flex items-center gap-2 mb-3 w-full text-left">
-          <StickyNote className="w-4 h-4 text-rose" />
-          <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Today&apos;s Notes ({todayNotes.length})</h2>
+          <div className="w-2 h-2 rounded-full bg-[#9b6b6b]" />
+          <h2 className="text-sm font-medium text-[#9b6b6b]">Today Note ({todayNotes.length})</h2>
           {sections.notes ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
           <Link href="/notes" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
         </button>
