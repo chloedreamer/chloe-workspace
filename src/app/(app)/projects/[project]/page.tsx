@@ -172,14 +172,14 @@ export default function ProjectPage() {
 
       {viewMode === "list" && (
         <div className="bg-white rounded-xl border border-rose-border shadow-sm overflow-hidden">
-          <table className="w-full">
+          <table className="w-full table-fixed">
             <thead>
               <tr className="bg-rose-light border-b border-rose-border">
                 <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3">Task</th>
                 <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3 w-28">Status</th>
                 <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3 w-28">Priority</th>
                 <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3 w-28">Due Date</th>
-                <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3 w-20">Progress</th>
+                <th className="text-left text-xs font-semibold text-rose-muted px-4 py-3 w-28">Progress</th>
                 <th className="w-10"></th>
               </tr>
             </thead>
