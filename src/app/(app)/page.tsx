@@ -135,17 +135,20 @@ export default function HomePage() {
         </p>
       </div>
 
+      {/* Overview: Productivity + Focus */}
+      <div className="mb-2">
+        <p className="text-xs text-rose-muted uppercase tracking-wider">Overview</p>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <ProductivityHeatmap />
+        <FocusHeatmap />
+      </div>
+
       {/* Daily Quote */}
       <QuoteCard />
 
       {/* Daily Intention */}
       <DailyIntention />
-
-      {/* Productivity Heatmap */}
-      <ProductivityHeatmap />
-
-      {/* Focus Heatmap */}
-      <FocusHeatmap />
 
       {/* SP2 Countdown */}
       {sp2Days > 0 && (
