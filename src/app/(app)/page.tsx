@@ -32,7 +32,7 @@ export default function HomePage() {
   const { data: notes } = useSWR<Note[]>(`/api/notes?date=${today}`, fetcher);
   const { data: events } = useSWR<{ id: string; title: string; date: string; time: string | null; type: string; color: string }[]>("/api/events", fetcher);
   const [sections, setSections] = useState<Record<string, boolean>>({
-    overdue: true, dueToday: true, inProgress: true, highPriority: true, events: true, notes: true, stats: true,
+    overdue: true, dueToday: true, inProgress: true, highPriority: true, todayEvents: true, events: true, notes: true,
   });
 
   const toggle = (k: string) => setSections((p) => ({ ...p, [k]: !p[k] }));
@@ -135,24 +135,13 @@ export default function HomePage() {
       {/* Daily Quote */}
       <QuoteCard />
 
-      {/* SP2 + Progress */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        {sp2Days > 0 && (
-          <div className="bg-rose-deep rounded-xl p-5 text-white">
-            <p className="text-xs font-medium opacity-80">SP2 Exam</p>
-            <p className="text-2xl font-semibold mt-1">{sp2Days} days</p>
-          </div>
-        )}
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-rose-dark">Overall Progress</span>
-            <span className="text-xs text-rose-muted">{doneCount}/{tasks.length}</span>
-          </div>
-          <div className="w-full bg-rose-light rounded-full h-2">
-            <div className="bg-rose-deep h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
-          </div>
+      {/* SP2 Countdown */}
+      {sp2Days > 0 && (
+        <div className="bg-rose-deep rounded-xl p-5 text-white mb-8">
+          <p className="text-xs font-medium opacity-80">SP2 Exam</p>
+          <p className="text-2xl font-semibold mt-1">{sp2Days} days</p>
         </div>
-      </div>
+      )}
 
       {/* Task Sections */}
       <Section id="overdue" title="Overdue" count={overdue.length} color="#ef4444" items={overdue} border="border-red-200" />
@@ -161,27 +150,58 @@ export default function HomePage() {
       <Section id="inProgress" title="In Progress" count={inProg.length} color="#3b82f6" items={inProg} />
       <Section id="highPriority" title="High Priority" count={highP.length} color="#ef4444" items={highP} />
 
-      {/* Upcoming Events */}
+      {/* Today Events */}
       {(() => {
         const todayEvents = (events || []).filter((e) => e.date.startsWith(today));
-        const upcoming = (events || []).filter((e) => e.date > today).slice(0, 5);
-        const allEvts = [...todayEvents, ...upcoming];
-        if (allEvts.length === 0) return null;
+        if (todayEvents.length === 0) return null;
+        const typeIcons: Record<string, typeof Cake> = { birthday: Cake, meeting: Users, event: PartyPopper };
+        return (
+          <section className="mb-6">
+            <button onClick={() => toggle("todayEvents")} className="flex items-center gap-2 mb-3 w-full text-left">
+              <CalendarHeart className="w-4 h-4 text-rose" />
+              <h2 className="text-sm font-medium text-rose-deep">Today Events ({todayEvents.length})</h2>
+              {sections.todayEvents ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+            </button>
+            {sections.todayEvents && (
+              <div className="card divide-y divide-rose-border">
+                {todayEvents.map((e) => {
+                  const Icon = typeIcons[e.type] || CalendarHeart;
+                  return (
+                    <div key={e.id} className="flex items-center gap-3 py-3 px-4">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${e.color}18` }}>
+                        <Icon className="w-4 h-4" style={{ color: e.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-rose-dark">{e.title}</p>
+                        {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
+                      </div>
+                      <span className="text-xs text-rose-deep font-medium flex-shrink-0">Today</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })()}
+
+      {/* Upcoming Events */}
+      {(() => {
+        const upcoming = (events || []).filter((e) => e.date.split("T")[0] > today).slice(0, 5);
+        if (upcoming.length === 0) return null;
         const typeIcons: Record<string, typeof Cake> = { birthday: Cake, meeting: Users, event: PartyPopper };
         return (
           <section className="mb-6">
             <button onClick={() => toggle("events")} className="flex items-center gap-2 mb-3 w-full text-left">
-              <CalendarHeart className="w-4 h-4 text-rose" />
-              <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Events ({allEvts.length})</h2>
+              <h2 className="text-sm font-medium text-rose-deep">Upcoming Events ({upcoming.length})</h2>
               {sections.events ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
               <Link href="/events" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
             </button>
             {sections.events && (
               <div className="card divide-y divide-rose-border">
-                {allEvts.map((e) => {
+                {upcoming.map((e) => {
                   const Icon = typeIcons[e.type] || CalendarHeart;
                   const d = new Date(e.date);
-                  const isToday2 = e.date.startsWith(today);
                   return (
                     <div key={e.id} className="flex items-center gap-3 py-3 px-4">
                       <Icon className="w-4 h-4 flex-shrink-0" style={{ color: e.color }} />
@@ -189,8 +209,8 @@ export default function HomePage() {
                         <p className="text-sm font-medium text-rose-dark">{e.title}</p>
                         {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
                       </div>
-                      <span className={`text-xs flex-shrink-0 ${isToday2 ? "text-rose-deep font-medium" : "text-rose-muted"}`}>
-                        {isToday2 ? "Today" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      <span className="text-xs text-rose-muted flex-shrink-0">
+                        {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                     </div>
                   );
@@ -222,34 +242,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Project Cards */}
-      <section>
-        <button onClick={() => toggle("stats")} className="flex items-center gap-2 mb-3 w-full text-left">
-          <h2 className="text-sm font-medium text-rose-deep">Projects</h2>
-          {sections.stats ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
-        </button>
-        {sections.stats && (
-          <div className="grid grid-cols-2 gap-4">
-            {projects.map((p) => {
-              const pTasks = tasks.filter((t) => t.category === p.key);
-              const pDone = pTasks.filter((t) => t.status === "done").length;
-              const pPct = pTasks.length > 0 ? Math.round((pDone / pTasks.length) * 100) : 0;
-              return (
-                <Link key={p.key} href={`/projects/${p.key}`} className="card p-4 hover:border-rose transition">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
-                    <span className="text-sm font-medium text-rose-dark">{p.name}</span>
-                    <span className="text-xs text-rose-muted ml-auto">{pDone}/{pTasks.length}</span>
-                  </div>
-                  <div className="w-full bg-rose-light rounded-full h-1.5">
-                    <div className="h-1.5 rounded-full transition-all" style={{ width: `${pPct}%`, backgroundColor: p.color }} />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
