@@ -15,7 +15,6 @@ export default function FocusTimer() {
   const [running, setRunning] = useState(false);
   const [cycles, setCycles] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Play bell sound using Web Audio API
   const playBell = useCallback(() => {
@@ -40,6 +39,16 @@ export default function FocusTimer() {
     }
   }, [playBell]);
 
+  const logFocusSession = useCallback(async () => {
+    try {
+      await fetch("/api/focus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration: 25 }),
+      });
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (running) {
       intervalRef.current = setInterval(() => {
@@ -50,6 +59,7 @@ export default function FocusTimer() {
               setCycles((c) => c + 1);
               setMode("break");
               notify("Focus session complete! Time for a break.");
+              logFocusSession();
               return BREAK_DURATION;
             } else {
               setMode("focus");
@@ -64,7 +74,7 @@ export default function FocusTimer() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [running, mode, notify]);
+  }, [running, mode, notify, logFocusSession]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {

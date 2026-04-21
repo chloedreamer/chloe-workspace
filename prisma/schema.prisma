@@ -67,6 +67,15 @@ model Event {
   updatedAt   DateTime @updatedAt
 }
 
+model FocusSession {
+  id          String   @id @default(cuid())
+  date        String
+  duration    Int      @default(25)
+  completedAt DateTime @default(now())
+
+  @@index([date])
+}
+
 model DailyIntention {
   id         String   @id @default(cuid())
   date       String   @unique

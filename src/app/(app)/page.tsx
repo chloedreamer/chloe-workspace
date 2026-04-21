@@ -15,6 +15,7 @@ import Link from "next/link";
 import QuoteCard from "@/components/QuoteCard";
 import DailyIntention from "@/components/DailyIntention";
 import ProductivityHeatmap from "@/components/ProductivityHeatmap";
+import FocusHeatmap from "@/components/FocusHeatmap";
 
 interface Subtask { id: string; title: string; done: boolean; }
 interface Task {
@@ -142,6 +143,9 @@ export default function HomePage() {
 
       {/* Productivity Heatmap */}
       <ProductivityHeatmap />
+
+      {/* Focus Heatmap */}
+      <FocusHeatmap />
 
       {/* SP2 Countdown */}
       {sp2Days > 0 && (
