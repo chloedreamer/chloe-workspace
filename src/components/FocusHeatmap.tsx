@@ -118,9 +118,9 @@ export default function FocusHeatmap() {
       </div>
 
       {/* Grid */}
-      <div className="flex gap-[2px]">
+      <div className="flex gap-1 justify-between">
         {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[2px]">
+          <div key={wi} className="flex flex-col gap-1 flex-1">
             {week.map((day) => {
               const isFuture = day.date > getDateStr(today);
               return (
@@ -128,7 +128,7 @@ export default function FocusHeatmap() {
                   key={day.date}
                   onMouseEnter={() => setHoveredDay(day)}
                   onMouseLeave={() => setHoveredDay(null)}
-                  className={`w-[11px] h-[11px] rounded-sm transition ${
+                  className={`aspect-square rounded transition ${
                     isFuture ? "bg-transparent" : getIntensity(day.minutes)
                   }`}
                 />
@@ -139,7 +139,7 @@ export default function FocusHeatmap() {
       </div>
 
       {/* Tooltip / Legend */}
-      <div className="mt-3 text-xs text-rose-muted h-4">
+      <div className="mt-4 text-xs text-rose-muted h-4">
         {hoveredDay ? (
           <span>
             <span className="font-medium text-rose-dark">{formatMinutes(hoveredDay.minutes)}</span>
@@ -149,12 +149,12 @@ export default function FocusHeatmap() {
         ) : (
           <div className="flex items-center gap-1.5">
             <span>Less</span>
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose-light/40" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-200" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-300" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-400" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
+            <div className="w-3 h-3 rounded bg-rose-light/40" />
+            <div className="w-3 h-3 rounded bg-blue-200" />
+            <div className="w-3 h-3 rounded bg-blue-300" />
+            <div className="w-3 h-3 rounded bg-blue-400" />
+            <div className="w-3 h-3 rounded bg-blue-500" />
+            <div className="w-3 h-3 rounded bg-blue-600" />
             <span>More</span>
           </div>
         )}

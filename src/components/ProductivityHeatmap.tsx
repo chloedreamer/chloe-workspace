@@ -105,9 +105,9 @@ export default function ProductivityHeatmap() {
       </div>
 
       {/* Grid */}
-      <div className="flex gap-[2px]">
+      <div className="flex gap-1 justify-between">
         {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[2px]">
+          <div key={wi} className="flex flex-col gap-1 flex-1">
             {week.map((day) => {
               const isFuture = day.date > getDateStr(today);
               return (
@@ -115,7 +115,7 @@ export default function ProductivityHeatmap() {
                   key={day.date}
                   onMouseEnter={() => setHoveredDay(day)}
                   onMouseLeave={() => setHoveredDay(null)}
-                  className={`w-[11px] h-[11px] rounded-sm transition ${
+                  className={`aspect-square rounded transition ${
                     isFuture ? "bg-transparent" : getIntensity(day.count)
                   }`}
                 />
@@ -126,7 +126,7 @@ export default function ProductivityHeatmap() {
       </div>
 
       {/* Tooltip / Legend */}
-      <div className="mt-3 text-xs text-rose-muted h-4">
+      <div className="mt-4 text-xs text-rose-muted h-4">
         {hoveredDay ? (
           <span>
             <span className="font-medium text-rose-dark">{hoveredDay.count}</span> task{hoveredDay.count !== 1 ? "s" : ""} ·{" "}
@@ -135,12 +135,12 @@ export default function ProductivityHeatmap() {
         ) : (
           <div className="flex items-center gap-1.5">
             <span>Less</span>
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose-light/40" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose-light" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose/40" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose/60" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-rose-deep" />
+            <div className="w-3 h-3 rounded bg-rose-light/40" />
+            <div className="w-3 h-3 rounded bg-rose-light" />
+            <div className="w-3 h-3 rounded bg-rose/40" />
+            <div className="w-3 h-3 rounded bg-rose/60" />
+            <div className="w-3 h-3 rounded bg-rose" />
+            <div className="w-3 h-3 rounded bg-rose-deep" />
             <span>More</span>
           </div>
         )}
