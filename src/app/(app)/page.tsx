@@ -16,6 +16,7 @@ import QuoteCard from "@/components/QuoteCard";
 import DailyIntention from "@/components/DailyIntention";
 import ProductivityHeatmap from "@/components/ProductivityHeatmap";
 import FocusHeatmap from "@/components/FocusHeatmap";
+import TaskDetailPanel from "@/components/TaskDetailPanel";
 
 interface Subtask { id: string; title: string; done: boolean; }
 interface Task {
@@ -37,6 +38,7 @@ export default function HomePage() {
   const [sections, setSections] = useState<Record<string, boolean>>({
     overdue: true, dueToday: true, inProgress: true, highPriority: true, todayEvents: true, events: true, notes: true,
   });
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const toggle = (k: string) => setSections((p) => ({ ...p, [k]: !p[k] }));
 
@@ -81,7 +83,12 @@ export default function HomePage() {
             {task.status === "in_progress" ? <Clock className="w-[18px] h-[18px] text-blue-500 group-hover:text-green-500 transition" /> : <Circle className="w-[18px] h-[18px] text-rose-border group-hover:text-green-500 transition" />}
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-rose-dark">{task.title}</p>
+            <button
+              onClick={() => setSelectedTaskId(task.id)}
+              className="text-sm font-medium text-rose-dark text-left hover:text-rose-deep transition"
+            >
+              {task.title}
+            </button>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               {proj && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${proj.color}18`, color: proj.color }}>{proj.name}</span>}
               <span className="text-xs" style={{ color: PRI_COLOR[task.priority] }}>{PRI_LABEL[task.priority]}</span>
@@ -257,6 +264,11 @@ export default function HomePage() {
         )}
       </section>
 
+      <TaskDetailPanel
+        taskId={selectedTaskId}
+        onClose={() => setSelectedTaskId(null)}
+        onUpdate={() => mutateTasks()}
+      />
     </div>
   );
 }
