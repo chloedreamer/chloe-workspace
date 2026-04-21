@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Timer, Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react";
+import { Timer, Play, Pause, RotateCcw, Coffee, Brain, X, Bell } from "lucide-react";
 
 type Mode = "focus" | "break";
 
@@ -16,19 +16,29 @@ export default function FocusTimer() {
   const [cycles, setCycles] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Play bell sound using Web Audio API
+  // Play a gentle bell chime using Web Audio API
   const playBell = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 800;
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
-      osc.start();
-      osc.stop(ctx.currentTime + 1);
+
+      const playTone = (freq: number, startAt: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
+        gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
+        osc.start(ctx.currentTime + startAt);
+        osc.stop(ctx.currentTime + startAt + duration);
+      };
+
+      // 3-note chime: C5 - E5 - G5 (pleasant major chord)
+      playTone(523.25, 0, 1.2);
+      playTone(659.25, 0.2, 1.2);
+      playTone(783.99, 0.4, 1.5);
     } catch {}
   }, []);
 
@@ -192,6 +202,7 @@ export default function FocusTimer() {
           <button
             onClick={reset}
             className="p-2 rounded-lg text-rose-muted hover:text-rose-deep hover:bg-rose-light transition"
+            title="Reset"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -201,6 +212,13 @@ export default function FocusTimer() {
           >
             {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {running ? "Pause" : "Start"}
+          </button>
+          <button
+            onClick={playBell}
+            className="p-2 rounded-lg text-rose-muted hover:text-rose-deep hover:bg-rose-light transition"
+            title="Test sound"
+          >
+            <Bell className="w-4 h-4" />
           </button>
         </div>
 
