@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   KanbanSquare,
   StickyNote,
   Calendar,
@@ -16,14 +15,14 @@ import {
 } from "lucide-react";
 import { useProjects } from "@/components/ProjectsProvider";
 import { useState } from "react";
+import GlobalSearch from "@/components/GlobalSearch";
 
 const navItems = [
   { href: "/", label: "Today", icon: CalendarDays },
-  { href: "/tasks", label: "All Tasks", icon: KanbanSquare },
+  { href: "/tasks", label: "Tasks", icon: KanbanSquare },
   { href: "/notes", label: "Notes", icon: StickyNote },
   { href: "/events", label: "Events", icon: CalendarHeart },
   { href: "/calendar", label: "Calendar", icon: Calendar },
-  { href: "/overview", label: "Overview", icon: LayoutDashboard },
 ];
 
 export default function Sidebar() {
@@ -45,17 +44,22 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-rose-border flex flex-col h-screen fixed left-0 top-0 z-30">
-      <div className="p-6 border-b border-rose-border">
+    <aside className="w-64 bg-white flex flex-col h-screen fixed left-0 top-0 z-30">
+      <div className="p-6">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-rose" />
-          <h1 className="text-xl font-bold text-rose-deep">Chloe Workspace</h1>
+          <Sparkles className="w-5 h-5 text-rose" />
+          <h1 className="text-base font-semibold text-rose-deep tracking-tight">
+            Chloe Workspace
+          </h1>
         </div>
-        <p className="text-xs text-rose-muted mt-1">Organize your life</p>
       </div>
 
-      <nav className="flex-1 p-3 overflow-y-auto">
-        <div className="space-y-1">
+      <div className="px-3 mb-3">
+        <GlobalSearch />
+      </div>
+
+      <nav className="flex-1 px-3 overflow-y-auto">
+        <div className="space-y-0.5">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -64,19 +68,19 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm ${
+                className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
                   isActive ? "active" : "text-rose-muted hover:text-rose-deep"
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-4 h-4" />
                 {item.label}
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-6 mb-2 px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-rose-muted uppercase tracking-wider">
+        <div className="mt-8 mb-2 px-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-medium text-rose-muted">
             <FolderOpen className="w-3.5 h-3.5" />
             Projects
           </div>
@@ -96,7 +100,7 @@ export default function Sidebar() {
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") quickAddProject(); if (e.key === "Escape") setShowQuickAdd(false); }}
               placeholder="Project name..."
-              className="w-full text-sm border border-rose-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose"
+              className="w-full text-sm bg-rose-light rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose border-0"
               autoFocus
             />
           </div>
@@ -109,11 +113,11 @@ export default function Sidebar() {
               <Link
                 key={proj.key}
                 href={`/projects/${proj.key}`}
-                className={`sidebar-link flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${
+                className={`sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm ${
                   isActive ? "active" : "text-rose-muted hover:text-rose-deep"
                 }`}
               >
-                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: proj.color }} />
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: proj.color }} />
                 {proj.name}
               </Link>
             );
@@ -121,14 +125,14 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="p-4 border-t border-rose-border">
+      <div className="p-3">
         <Link
           href="/settings"
-          className={`sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm ${
+          className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
             pathname === "/settings" ? "active" : "text-rose-muted hover:text-rose-deep"
           }`}
         >
-          <Settings className="w-5 h-5" />
+          <Settings className="w-4 h-4" />
           Settings
         </Link>
       </div>

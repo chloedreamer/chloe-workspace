@@ -83,11 +83,11 @@ export default function NotesPage() {
     : notes;
 
   return (
-    <div className="max-w-7xl mx-auto flex gap-6 h-[calc(100vh-8rem)]">
+    <div className="flex gap-6 h-[calc(100vh-6rem)]">
       {/* Notes List */}
       <div className="w-80 flex-shrink-0 flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-rose-dark">Notes</h1>
+          <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Notes</h1>
           <button onClick={createNote} className="flex items-center gap-1 bg-rose-deep text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition">
             <Plus className="w-4 h-4" /> New
           </button>
@@ -134,7 +134,7 @@ export default function NotesPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 bg-white rounded-xl border border-rose-border shadow-sm flex flex-col overflow-hidden">
+      <div className="flex-1 card flex flex-col overflow-hidden">
         {selectedNote ? (
           <>
             <div className="flex items-center justify-between p-4 border-b border-rose-border">

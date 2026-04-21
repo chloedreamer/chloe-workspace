@@ -111,15 +111,15 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-rose-dark">All Tasks</h1>
-          <p className="text-sm text-rose-muted mt-1">{tasks.length} tasks total</p>
+          <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Tasks</h1>
+          <p className="text-sm text-rose-muted mt-1">{tasks.length} total</p>
         </div>
         <div className="flex items-center gap-3">
           {/* View Toggle */}
-          <div className="flex items-center bg-white border border-rose-border rounded-lg overflow-hidden">
+          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm">
             <button onClick={() => setViewMode("board")} className={`p-2 transition ${viewMode === "board" ? "bg-rose-light text-rose-deep" : "text-rose-muted hover:text-rose-deep"}`}>
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -128,7 +128,7 @@ export default function TasksPage() {
             </button>
           </div>
           <div className="relative">
-            <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="appearance-none bg-white border border-rose-border rounded-lg px-4 py-2 pr-8 text-sm text-rose-dark focus:outline-none focus:ring-2 focus:ring-rose">
+            <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="appearance-none bg-white shadow-sm rounded-lg px-4 py-2 pr-8 text-sm text-rose-dark focus:outline-none focus:ring-2 focus:ring-rose">
               <option value="all">All Projects</option>
               {projects.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
             </select>
@@ -209,19 +209,19 @@ export default function TasksPage() {
             const colTasks = filteredTasks.filter((t) => t.status === col.key);
             return (
               <div key={col.key} className="kanban-column" onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, col.key)}>
-                <div className={`${col.headerColor} border rounded-t-xl px-4 py-3 flex items-center gap-2`}>
+                <div className={`${col.headerColor} rounded-t-xl px-4 py-3 flex items-center gap-2`}>
                   <div className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`} />
                   <h3 className="font-semibold text-sm text-rose-dark">{col.label}</h3>
                   <span className="text-xs text-rose-muted ml-auto">{colTasks.length}</span>
                 </div>
-                <div className="bg-white/50 border border-t-0 rounded-b-xl p-3 space-y-3 min-h-[300px]">
+                <div className="bg-white/40 rounded-b-xl p-3 space-y-3 min-h-[300px]">
                   {colTasks.map((task) => {
                     const proj = projects.find((p) => p.key === task.category);
                     const pri = PRIORITIES.find((p) => p.key === task.priority);
                     const doneSubtasks = task.subtasks?.filter((s) => s.done).length || 0;
                     const totalSubtasks = task.subtasks?.length || 0;
                     return (
-                      <div key={task.id} draggable onDragStart={(e) => handleDragStart(e, task.id)} className="task-card bg-white rounded-lg p-4 border border-rose-border cursor-grab active:cursor-grabbing">
+                      <div key={task.id} draggable onDragStart={(e) => handleDragStart(e, task.id)} className="task-card bg-white rounded-lg p-4 shadow-sm cursor-grab active:cursor-grabbing">
                         <div className="flex items-start justify-between gap-2">
                           <GripVertical className="w-4 h-4 text-rose-border mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -259,7 +259,7 @@ export default function TasksPage() {
 
       {/* List View */}
       {viewMode === "list" && (
-        <div className="bg-white rounded-xl border border-rose-border shadow-sm overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="w-full table-fixed">
             <thead>
               <tr className="bg-rose-light border-b border-rose-border">

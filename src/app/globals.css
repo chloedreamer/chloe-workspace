@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf5f5;
+  --background: #fbf7f7;
   --foreground: #2a1f1f;
 }
 
@@ -11,9 +11,9 @@
   --color-rose: #c8a0a0;
   --color-rose-deep: #9b6b6b;
   --color-rose-light: #f5eded;
-  --color-rose-bg: #faf5f5;
-  --color-rose-border: #e8dede;
-  --color-rose-muted: #7a6a6a;
+  --color-rose-bg: #fbf7f7;
+  --color-rose-border: #ece4e4;
+  --color-rose-muted: #8a7a7a;
   --color-rose-dark: #2a1f1f;
   --font-inter: var(--font-inter);
 }
@@ -21,11 +21,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  letter-spacing: -0.011em;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #e8dede transparent;
+  scrollbar-color: #ece4e4 transparent;
   box-sizing: border-box;
 }
 
@@ -34,11 +35,11 @@ body {
 }
 
 .task-card {
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .task-card:hover {
-  box-shadow: 0 4px 12px rgba(155, 107, 107, 0.12);
+  box-shadow: 0 4px 16px rgba(155, 107, 107, 0.08);
   transform: translateY(-1px);
 }
 
@@ -59,7 +60,7 @@ body {
 .sidebar-link.active {
   background: #f5eded;
   color: #9b6b6b;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @keyframes slide-in {
@@ -71,7 +72,13 @@ body {
   animation: slide-in 0.2s ease-out;
 }
 
-/* Consistent grid cards */
 .grid > * {
   min-width: 0;
+}
+
+/* Elegant card styling */
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(42, 31, 31, 0.04), 0 1px 2px rgba(42, 31, 31, 0.03);
 }

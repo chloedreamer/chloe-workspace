@@ -53,9 +53,9 @@ export default function CalendarPage() {
   const selectedItems = selectedDate ? getItemsForDate(selectedDate) : null;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-rose-dark">Calendar</h1>
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Calendar</h1>
         <div className="flex items-center gap-3">
           <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="p-2 rounded-lg hover:bg-rose-light text-rose-muted transition">
             <ChevronLeft className="w-5 h-5" />
@@ -69,7 +69,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-rose-border shadow-sm overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="grid grid-cols-7">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
             <div key={d} className="px-2 py-3 text-center text-xs font-semibold text-rose-muted bg-rose-light border-b border-rose-border">{d}</div>
@@ -104,7 +104,7 @@ export default function CalendarPage() {
       </div>
 
       {selectedItems && selectedDate && (
-        <div className="mt-6 bg-white rounded-xl border border-rose-border shadow-sm p-6">
+        <div className="mt-6 card p-6">
           <h2 className="text-lg font-semibold text-rose-dark mb-4">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </h2>

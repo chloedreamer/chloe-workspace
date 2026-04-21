@@ -8,8 +8,8 @@ import { COLUMNS } from "@/lib/constants";
 import { TodaySkeleton } from "@/components/Skeleton";
 import {
   CheckCircle2, Circle, Clock, StickyNote, CalendarHeart,
-  CalendarDays, ArrowRight, ChevronDown, ChevronUp,
-  TrendingUp, BarChart3, Cake, Users, PartyPopper,
+  ArrowRight, ChevronDown, ChevronUp,
+  Cake, Users, PartyPopper,
 } from "lucide-react";
 import Link from "next/link";
 import QuoteCard from "@/components/QuoteCard";
@@ -110,7 +110,7 @@ export default function HomePage() {
       <section className="mb-6">
         <button onClick={() => toggle(id)} className="flex items-center gap-2 mb-3 w-full text-left">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color }}>{title} ({count})</h2>
+          <h2 className="text-sm font-medium" style={{ color }}>{title} ({count})</h2>
           {sections[id] ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
         </button>
         {sections[id] && <div className={`bg-white rounded-xl border shadow-sm divide-y divide-rose-border ${border || "border-rose-border"}`}>{items.map((t) => <TaskRow key={t.id} task={t} />)}</div>}
@@ -121,41 +121,35 @@ export default function HomePage() {
   const todayNotes = notes || [];
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-rose-dark">
-            {(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; })()}, Chloe!
-          </h1>
-          <p className="text-rose-muted text-sm mt-1 flex items-center gap-2">
-            <CalendarDays className="w-4 h-4" />
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
-        </div>
-        <Link href="/overview" className="flex items-center gap-1 text-sm text-rose-deep hover:underline">
-          <BarChart3 className="w-4 h-4" /> Stats
-        </Link>
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">
+          {(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; })()}, Chloe
+        </h1>
+        <p className="text-rose-muted text-sm mt-1">
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </p>
       </div>
 
       {/* Daily Quote */}
       <QuoteCard />
 
       {/* SP2 + Progress */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-8">
         {sp2Days > 0 && (
-          <div className="bg-rose-deep rounded-xl p-4 text-white">
+          <div className="bg-rose-deep rounded-xl p-5 text-white">
             <p className="text-xs font-medium opacity-80">SP2 Exam</p>
-            <p className="text-2xl font-bold">{sp2Days} days</p>
+            <p className="text-2xl font-semibold mt-1">{sp2Days} days</p>
           </div>
         )}
-        <div className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
+        <div className="card p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-rose-dark">Progress</span>
+            <span className="text-sm font-medium text-rose-dark">Overall Progress</span>
             <span className="text-xs text-rose-muted">{doneCount}/{tasks.length}</span>
           </div>
-          <div className="w-full bg-rose-light rounded-full h-2.5">
-            <div className="bg-rose-deep h-2.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+          <div className="w-full bg-rose-light rounded-full h-2">
+            <div className="bg-rose-deep h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
       </div>
@@ -163,7 +157,7 @@ export default function HomePage() {
       {/* Task Sections */}
       <Section id="overdue" title="Overdue" count={overdue.length} color="#ef4444" items={overdue} border="border-red-200" />
       <Section id="dueToday" title="Due Today" count={dueToday.length} color="#9b6b6b" items={dueToday} />
-      {dueToday.length === 0 && overdue.length === 0 && <div className="bg-white rounded-xl border border-rose-border shadow-sm p-5 text-center text-sm text-rose-muted mb-6">No tasks due today</div>}
+      {dueToday.length === 0 && overdue.length === 0 && <div className="card p-5 text-center text-sm text-rose-muted mb-6">No tasks due today</div>}
       <Section id="inProgress" title="In Progress" count={inProg.length} color="#3b82f6" items={inProg} />
       <Section id="highPriority" title="High Priority" count={highP.length} color="#ef4444" items={highP} />
 
@@ -183,7 +177,7 @@ export default function HomePage() {
               <Link href="/events" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
             </button>
             {sections.events && (
-              <div className="bg-white rounded-xl border border-rose-border shadow-sm divide-y divide-rose-border">
+              <div className="card divide-y divide-rose-border">
                 {allEvts.map((e) => {
                   const Icon = typeIcons[e.type] || CalendarHeart;
                   const d = new Date(e.date);
@@ -216,9 +210,9 @@ export default function HomePage() {
           <Link href="/notes" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>All <ArrowRight className="w-3 h-3" /></Link>
         </button>
         {sections.notes && (todayNotes.length === 0
-          ? <div className="bg-white rounded-xl border border-rose-border shadow-sm p-5 text-center text-sm text-rose-muted">No notes for today. <Link href="/notes" className="text-rose-deep hover:underline">Write one</Link></div>
+          ? <div className="card p-5 text-center text-sm text-rose-muted">No notes for today. <Link href="/notes" className="text-rose-deep hover:underline">Write one</Link></div>
           : <div className="space-y-3">{todayNotes.map((n) => { const p = getProj(n.category); const plain = n.content.replace(/<[^>]*>/g, " ").trim(); return (
-            <div key={n.id} className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
+            <div key={n.id} className="card p-4">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-sm font-semibold text-rose-dark">{n.title || "Untitled"}</h3>
                 {p && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${p.color}18`, color: p.color }}>{p.name}</span>}
@@ -231,8 +225,7 @@ export default function HomePage() {
       {/* Project Cards */}
       <section>
         <button onClick={() => toggle("stats")} className="flex items-center gap-2 mb-3 w-full text-left">
-          <TrendingUp className="w-4 h-4 text-rose" />
-          <h2 className="text-sm font-semibold text-rose-deep uppercase tracking-wider">Projects</h2>
+          <h2 className="text-sm font-medium text-rose-deep">Projects</h2>
           {sections.stats ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
         </button>
         {sections.stats && (
@@ -242,7 +235,7 @@ export default function HomePage() {
               const pDone = pTasks.filter((t) => t.status === "done").length;
               const pPct = pTasks.length > 0 ? Math.round((pDone / pTasks.length) * 100) : 0;
               return (
-                <Link key={p.key} href={`/projects/${p.key}`} className="bg-white rounded-xl border border-rose-border shadow-sm p-4 hover:border-rose transition">
+                <Link key={p.key} href={`/projects/${p.key}`} className="card p-4 hover:border-rose transition">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
                     <span className="text-sm font-medium text-rose-dark">{p.name}</span>

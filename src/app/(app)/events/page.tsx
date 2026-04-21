@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { COLOR_OPTIONS } from "@/lib/constants";
 import {
-  Plus, Trash2, X, Pencil, CalendarHeart, Gift, Users, Clock,
-  ChevronLeft, ChevronRight, Cake, PartyPopper, Calendar,
+  Plus, Trash2, X, Pencil, CalendarHeart, Users, Clock,
+  Cake, PartyPopper, Calendar,
 } from "lucide-react";
 
 interface Event {
@@ -42,24 +42,23 @@ function getTypeIcon(type: string) {
   return t ? t.icon : Calendar;
 }
 
-export default function EventsPage() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth() + 1;
+function formatEventDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
 
-  const { data: events, mutate } = useSWR<Event[]>(`/api/events?month=${month}&year=${year}`, fetcher);
-  const { data: allEvents, mutate: mutateAll } = useSWR<Event[]>("/api/events", fetcher);
+export default function EventsPage() {
+  const { data: events, mutate } = useSWR<Event[]>("/api/events", fetcher);
 
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", date: "", time: "", type: "event",
     color: "#9b6b6b", recurring: "", reminder: false,
   });
 
   const resetForm = () => {
-    setForm({ title: "", description: "", date: selectedDate || "", time: "", type: "event", color: "#9b6b6b", recurring: "", reminder: false });
+    setForm({ title: "", description: "", date: "", time: "", type: "event", color: "#9b6b6b", recurring: "", reminder: false });
     setEditingEvent(null);
   };
 
@@ -72,7 +71,7 @@ export default function EventsPage() {
     });
     setShowForm(false);
     resetForm();
-    mutate(); mutateAll();
+    mutate();
   };
 
   const updateEvent = async () => {
@@ -84,12 +83,12 @@ export default function EventsPage() {
     });
     setShowForm(false);
     setEditingEvent(null);
-    mutate(); mutateAll();
+    mutate();
   };
 
   const deleteEvent = async (id: string) => {
     await fetch(`/api/events/${id}`, { method: "DELETE" });
-    mutate(); mutateAll();
+    mutate();
   };
 
   const startEdit = (e: Event) => {
@@ -107,28 +106,40 @@ export default function EventsPage() {
     setShowForm(true);
   };
 
-  const firstDay = new Date(year, month - 1, 1).getDay();
-  const daysInMonth = new Date(year, month, 0).getDate();
   const today = new Date().toISOString().split("T")[0];
+  const allEvents = events || [];
+  const upcoming = allEvents.filter((e) => e.date.split("T")[0] >= today).sort((a, b) => a.date.localeCompare(b.date));
+  const past = allEvents.filter((e) => e.date.split("T")[0] < today).sort((a, b) => b.date.localeCompare(a.date));
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let i = 1; i <= daysInMonth; i++) days.push(i);
-
-  const getDateStr = (day: number) => `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-  const getEventsForDate = (dateStr: string) =>
-    (events || []).filter((e) => e.date.startsWith(dateStr));
-
-  const upcomingEvents = (allEvents || [])
-    .filter((e) => e.date >= today)
-    .slice(0, 10);
+  function EventRow({ event }: { event: Event }) {
+    const Icon = getTypeIcon(event.type);
+    return (
+      <div className="flex items-start gap-3 py-3 px-4 hover:bg-rose-light/40 transition group">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${event.color}18` }}>
+          <Icon className="w-4 h-4" style={{ color: event.color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-rose-dark">{event.title}</p>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className="text-xs text-rose-muted">{formatEventDate(event.date)}</span>
+            {event.time && <span className="text-xs text-rose-muted">· {event.time}</span>}
+            {event.recurring && <span className="text-xs text-rose-deep">· {RECURRING_OPTIONS.find((r) => r.key === event.recurring)?.label}</span>}
+          </div>
+          {event.description && <p className="text-xs text-rose-muted mt-1">{event.description}</p>}
+        </div>
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+          <button onClick={() => startEdit(event)} className="p-1.5 text-rose-muted hover:text-rose-deep rounded"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={() => deleteEvent(event.id)} className="p-1.5 text-rose-muted hover:text-red-400 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-rose-dark">Events</h1>
+          <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Events</h1>
           <p className="text-sm text-rose-muted mt-1">Birthdays, meetings, appointments</p>
         </div>
         <button
@@ -190,122 +201,27 @@ export default function EventsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Calendar */}
-        <div className="col-span-2">
-          <div className="bg-white rounded-xl border border-rose-border shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 bg-rose-light border-b border-rose-border">
-              <button onClick={() => setCurrentMonth(new Date(year, month - 2, 1))} className="p-1 rounded hover:bg-white text-rose-muted"><ChevronLeft className="w-4 h-4" /></button>
-              <span className="text-sm font-semibold text-rose-dark">
-                {currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-              </span>
-              <button onClick={() => setCurrentMonth(new Date(year, month, 1))} className="p-1 rounded hover:bg-white text-rose-muted"><ChevronRight className="w-4 h-4" /></button>
-            </div>
-            <div className="grid grid-cols-7">
-              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-                <div key={d} className="px-1 py-2 text-center text-xs font-semibold text-rose-muted border-b border-rose-border">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {days.map((day, idx) => {
-                if (day === null) return <div key={`e-${idx}`} className="h-20 border-b border-r border-rose-border/30" />;
-                const dateStr = getDateStr(day);
-                const isToday = dateStr === today;
-                const isSelected = dateStr === selectedDate;
-                const dayEvents = getEventsForDate(dateStr);
-                return (
-                  <div
-                    key={day}
-                    onClick={() => { setSelectedDate(dateStr); setForm((f) => ({ ...f, date: dateStr })); }}
-                    className={`h-20 border-b border-r border-rose-border/30 p-1 cursor-pointer transition hover:bg-rose-light ${isSelected ? "bg-rose-light ring-1 ring-rose ring-inset" : ""}`}
-                  >
-                    <div className={`text-xs font-medium w-5 h-5 flex items-center justify-center rounded-full mb-0.5 ${isToday ? "bg-rose-deep text-white" : "text-rose-dark"}`}>{day}</div>
-                    {dayEvents.slice(0, 2).map((e) => {
-                      const Icon = getTypeIcon(e.type);
-                      return (
-                        <div key={e.id} className="flex items-center gap-1 text-xs px-1 py-0.5 rounded truncate mb-0.5" style={{ backgroundColor: `${e.color}18`, color: e.color }}>
-                          <Icon className="w-2.5 h-2.5 flex-shrink-0" />
-                          <span className="truncate">{e.title}</span>
-                        </div>
-                      );
-                    })}
-                    {dayEvents.length > 2 && <div className="text-xs text-rose-muted px-1">+{dayEvents.length - 2}</div>}
-                  </div>
-                );
-              })}
-            </div>
+      {/* Upcoming Events */}
+      <section className="mb-8">
+        <h2 className="text-sm font-medium text-rose-deep mb-3">Upcoming ({upcoming.length})</h2>
+        {upcoming.length === 0 ? (
+          <div className="card p-6 text-center text-sm text-rose-muted">No upcoming events</div>
+        ) : (
+          <div className="card divide-y divide-rose-border">
+            {upcoming.map((e) => <EventRow key={e.id} event={e} />)}
           </div>
-        </div>
+        )}
+      </section>
 
-        {/* Sidebar: Upcoming + Selected Date */}
-        <div className="space-y-6">
-          {/* Selected Date Events */}
-          {selectedDate && (
-            <div className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-rose-dark">
-                  {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                </h3>
-                <button onClick={() => { resetForm(); setForm((f) => ({ ...f, date: selectedDate })); setShowForm(true); }} className="text-xs text-rose-deep hover:underline">+ Add</button>
-              </div>
-              {getEventsForDate(selectedDate).length === 0 ? (
-                <p className="text-xs text-rose-muted">No events</p>
-              ) : (
-                <div className="space-y-2">
-                  {getEventsForDate(selectedDate).map((e) => {
-                    const Icon = getTypeIcon(e.type);
-                    return (
-                      <div key={e.id} className="p-2 rounded-lg border border-rose-border group">
-                        <div className="flex items-start gap-2">
-                          <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: e.color }} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-rose-dark">{e.title}</p>
-                            {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
-                            {e.description && <p className="text-xs text-rose-muted mt-0.5">{e.description}</p>}
-                            {e.recurring && <p className="text-xs text-rose-deep">{RECURRING_OPTIONS.find((r) => r.key === e.recurring)?.label}</p>}
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                            <button onClick={() => startEdit(e)} className="p-1 text-rose-muted hover:text-rose-deep"><Pencil className="w-3 h-3" /></button>
-                            <button onClick={() => deleteEvent(e.id)} className="p-1 text-rose-muted hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Upcoming Events */}
-          <div className="bg-white rounded-xl border border-rose-border shadow-sm p-4">
-            <h3 className="text-sm font-semibold text-rose-dark mb-3 flex items-center gap-2">
-              <CalendarHeart className="w-4 h-4 text-rose" /> Upcoming
-            </h3>
-            {upcomingEvents.length === 0 ? (
-              <p className="text-xs text-rose-muted">No upcoming events</p>
-            ) : (
-              <div className="space-y-2">
-                {upcomingEvents.map((e) => {
-                  const Icon = getTypeIcon(e.type);
-                  const d = new Date(e.date);
-                  return (
-                    <div key={e.id} className="flex items-center gap-2 py-1.5">
-                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: e.color }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-rose-dark truncate">{e.title}</p>
-                      </div>
-                      <span className="text-xs text-rose-muted flex-shrink-0">
-                        {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+      {/* Past Events */}
+      {past.length > 0 && (
+        <section>
+          <h2 className="text-sm font-medium text-rose-muted mb-3">Past ({past.length})</h2>
+          <div className="card divide-y divide-rose-border opacity-60">
+            {past.slice(0, 20).map((e) => <EventRow key={e.id} event={e} />)}
           </div>
-        </div>
-      </div>
+        </section>
+      )}
     </div>
   );
 }

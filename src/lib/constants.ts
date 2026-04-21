@@ -9,9 +9,9 @@ export interface Project {
 }
 
 export const COLUMNS = [
-  { key: "todo", label: "To Do", headerColor: "bg-rose-light border-rose-border", dotColor: "bg-gray-400" },
-  { key: "in_progress", label: "In Progress", headerColor: "bg-blue-50 border-blue-200", dotColor: "bg-blue-400" },
-  { key: "done", label: "Done", headerColor: "bg-green-50 border-green-200", dotColor: "bg-green-400" },
+  { key: "todo", label: "To Do", headerColor: "bg-rose-light/40", dotColor: "bg-gray-400" },
+  { key: "in_progress", label: "In Progress", headerColor: "bg-rose-light/40", dotColor: "bg-blue-400" },
+  { key: "done", label: "Done", headerColor: "bg-rose-light/40", dotColor: "bg-green-400" },
 ];
 
 export const PRIORITIES = [

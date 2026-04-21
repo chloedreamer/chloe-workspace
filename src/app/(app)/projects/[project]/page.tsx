@@ -134,18 +134,18 @@ export default function ProjectPage() {
             const colTasks = tasks.filter((t) => t.status === col.key);
             return (
               <div key={col.key} className="kanban-column" onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, col.key)}>
-                <div className={`${col.headerColor} border rounded-t-xl px-4 py-3 flex items-center gap-2`}>
+                <div className={`${col.headerColor} rounded-t-xl px-4 py-3 flex items-center gap-2`}>
                   <div className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`} />
-                  <h3 className="font-semibold text-sm text-rose-dark">{col.label}</h3>
+                  <h3 className="font-medium text-sm text-rose-dark">{col.label}</h3>
                   <span className="text-xs text-rose-muted ml-auto">{colTasks.length}</span>
                 </div>
-                <div className="bg-white/50 border border-t-0 rounded-b-xl p-3 space-y-3 min-h-[300px]">
+                <div className="bg-white/40 rounded-b-xl p-3 space-y-3 min-h-[300px]">
                   {colTasks.map((task) => {
                     const pri = PRIORITIES.find((p) => p.key === task.priority);
                     const doneS = task.subtasks?.filter((s) => s.done).length || 0;
                     const totalS = task.subtasks?.length || 0;
                     return (
-                      <div key={task.id} draggable onDragStart={(e) => handleDragStart(e, task.id)} className="task-card bg-white rounded-lg p-4 border border-rose-border cursor-grab active:cursor-grabbing">
+                      <div key={task.id} draggable onDragStart={(e) => handleDragStart(e, task.id)} className="task-card bg-white rounded-lg p-4 shadow-sm cursor-grab active:cursor-grabbing">
                         <div className="flex items-start justify-between gap-2">
                           <GripVertical className="w-4 h-4 text-rose-border mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -171,7 +171,7 @@ export default function ProjectPage() {
       )}
 
       {viewMode === "list" && (
-        <div className="bg-white rounded-xl border border-rose-border shadow-sm overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="w-full table-fixed">
             <thead>
               <tr className="bg-rose-light border-b border-rose-border">

@@ -59,10 +59,10 @@ export default function GlobalSearch() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="flex items-center gap-2 bg-white border border-rose-border rounded-lg px-3 py-2 text-sm text-rose-muted hover:border-rose transition w-64">
-        <Search className="w-4 h-4" />
-        <span className="flex-1 text-left">Search...</span>
-        <kbd className="text-xs bg-rose-light px-1.5 py-0.5 rounded">Cmd+K</kbd>
+      <button onClick={() => setOpen(true)} className="flex items-center gap-2 bg-rose-light/50 hover:bg-rose-light rounded-lg px-3 py-1.5 text-sm text-rose-muted transition w-full">
+        <Search className="w-3.5 h-3.5" />
+        <span className="flex-1 text-left">Search</span>
+        <kbd className="text-xs bg-white px-1.5 py-0.5 rounded text-rose-muted">⌘K</kbd>
       </button>
     );
   }
@@ -90,7 +90,7 @@ export default function GlobalSearch() {
           <div className="max-h-[50vh] overflow-y-auto p-2">
             {tasks.length > 0 && (
               <div className="mb-2">
-                <p className="text-xs font-semibold text-rose-muted px-2 py-1 uppercase tracking-wider">Tasks</p>
+                <p className="text-xs font-medium text-rose-muted px-2 py-1">Tasks</p>
                 {tasks.map((t) => {
                   const proj = projects.find((p) => p.key === t.category);
                   return (
@@ -105,7 +105,7 @@ export default function GlobalSearch() {
             )}
             {notes.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-rose-muted px-2 py-1 uppercase tracking-wider">Notes</p>
+                <p className="text-xs font-medium text-rose-muted px-2 py-1">Notes</p>
                 {notes.map((n) => (
                   <button key={n.id} onClick={() => { router.push("/notes"); close(); }} className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover:bg-rose-light transition">
                     <StickyNote className="w-4 h-4 text-rose-muted flex-shrink-0" />
