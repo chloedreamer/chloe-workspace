@@ -176,14 +176,12 @@ export default function FocusHeatmap() {
           </span>
         ) : (
           <div className="flex items-center gap-1.5">
-            <span>Less</span>
             <div className="w-3 h-3 rounded bg-rose-light/40" />
             <div className="w-3 h-3 rounded bg-blue-200" />
             <div className="w-3 h-3 rounded bg-blue-300" />
             <div className="w-3 h-3 rounded bg-blue-400" />
             <div className="w-3 h-3 rounded bg-blue-500" />
             <div className="w-3 h-3 rounded bg-blue-600" />
-            <span>More</span>
           </div>
         )}
       </div>

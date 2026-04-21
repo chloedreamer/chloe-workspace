@@ -166,14 +166,12 @@ export default function ProductivityHeatmap() {
           </span>
         ) : (
           <div className="flex items-center gap-1.5">
-            <span>Less</span>
             <div className="w-3 h-3 rounded bg-rose-light/40" />
             <div className="w-3 h-3 rounded bg-rose-light" />
             <div className="w-3 h-3 rounded bg-rose/40" />
             <div className="w-3 h-3 rounded bg-rose/60" />
             <div className="w-3 h-3 rounded bg-rose" />
             <div className="w-3 h-3 rounded bg-rose-deep" />
-            <span>More</span>
           </div>
         )}
       </div>
