@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import QuoteCard from "@/components/QuoteCard";
+import DailyIntention from "@/components/DailyIntention";
+import ProductivityHeatmap from "@/components/ProductivityHeatmap";
 
 interface Subtask { id: string; title: string; done: boolean; }
 interface Task {
@@ -134,6 +136,12 @@ export default function HomePage() {
 
       {/* Daily Quote */}
       <QuoteCard />
+
+      {/* Daily Intention */}
+      <DailyIntention />
+
+      {/* Productivity Heatmap */}
+      <ProductivityHeatmap />
 
       {/* SP2 Countdown */}
       {sp2Days > 0 && (
