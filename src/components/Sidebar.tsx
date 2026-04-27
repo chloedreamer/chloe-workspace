@@ -25,7 +25,7 @@ const navItems = [
   { href: "/", label: "Today", icon: CalendarDays },
   { href: "/tasks", label: "Tasks", icon: KanbanSquare },
   { href: "/notes", label: "Notes", icon: StickyNote },
-  { href: "/events", label: "Events", icon: CalendarHeart },
+  { href: "/events", label: "Schedule", icon: CalendarHeart },
   { href: "/calendar", label: "Calendar", icon: Calendar },
 ];
 

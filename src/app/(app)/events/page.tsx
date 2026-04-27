@@ -32,9 +32,10 @@ const EVENT_TYPES = [
 
 const RECURRING_OPTIONS = [
   { key: "", label: "No repeat" },
-  { key: "yearly", label: "Every year" },
-  { key: "monthly", label: "Every month" },
+  { key: "daily", label: "Every day" },
   { key: "weekly", label: "Every week" },
+  { key: "monthly", label: "Every month" },
+  { key: "yearly", label: "Every year" },
 ];
 
 function getTypeIcon(type: string) {
@@ -139,8 +140,8 @@ export default function EventsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Events</h1>
-          <p className="text-sm text-rose-muted mt-1">Birthdays, meetings, appointments</p>
+          <h1 className="text-3xl font-semibold text-rose-dark tracking-tight">Schedule</h1>
+          <p className="text-sm text-rose-muted mt-1">Events, routines, appointments</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
