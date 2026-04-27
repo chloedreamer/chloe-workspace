@@ -8,12 +8,12 @@ const PETAL = "🌸";
 
 export default function SakuraEffect() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem("sakura-enabled");
-    setEnabled(stored === "true");
+    if (stored !== null) setEnabled(stored === "true");
   }, []);
 
   useEffect(() => {
