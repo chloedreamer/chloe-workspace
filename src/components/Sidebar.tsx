@@ -141,7 +141,7 @@ export default function Sidebar() {
             className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
           >
             <Globe className="w-4 h-4" />
-            <span className="flex-1">TIMELESS</span>
+            <span className="flex-1">Timeless</span>
             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
           </a>
           <a
@@ -161,7 +161,7 @@ export default function Sidebar() {
             className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span className="flex-1">Shopee</span>
+            <span className="flex-1">Link Shopee</span>
             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
           </a>
         </div>
