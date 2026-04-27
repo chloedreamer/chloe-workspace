@@ -12,6 +12,10 @@ import {
   Sparkles,
   FolderOpen,
   Plus,
+  ExternalLink,
+  Globe,
+  Shield,
+  ShoppingBag,
 } from "lucide-react";
 import { useProjects } from "@/components/ProjectsProvider";
 import { useState } from "react";
@@ -122,6 +126,44 @@ export default function Sidebar() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Shortcuts */}
+        <div className="mt-8 mb-2 px-3 flex items-center gap-2 text-xs font-medium text-rose-muted">
+          <ExternalLink className="w-3.5 h-3.5" />
+          Shortcuts
+        </div>
+        <div className="space-y-0.5">
+          <a
+            href="https://timeless-vn.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
+          >
+            <Globe className="w-4 h-4" />
+            <span className="flex-1">TIMELESS</span>
+            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
+          </a>
+          <a
+            href="https://timeless-admin.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
+          >
+            <Shield className="w-4 h-4" />
+            <span className="flex-1">Admin</span>
+            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
+          </a>
+          <a
+            href="https://timeless-shopee.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span className="flex-1">Shopee</span>
+            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
+          </a>
         </div>
       </nav>
 
