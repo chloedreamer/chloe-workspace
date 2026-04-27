@@ -34,7 +34,38 @@ export default function HomePage() {
   const { projects } = useProjects();
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher);
   const { data: notes } = useSWR<Note[]>(`/api/notes?date=${today}`, fetcher);
-  const { data: events } = useSWR<{ id: string; title: string; date: string; time: string | null; type: string; color: string }[]>("/api/events", fetcher);
+  const { data: events, mutate: mutateEvents } = useSWR<{ id: string; title: string; date: string; time: string | null; type: string; color: string; recurring: string | null; completedDates: string }[]>("/api/events", fetcher);
+
+  const isEventDoneOnDate = (e: { completedDates?: string }, dateStr: string) => {
+    try {
+      const arr = JSON.parse(e.completedDates || "[]");
+      return Array.isArray(arr) && arr.includes(dateStr);
+    } catch { return false; }
+  };
+
+  const toggleEventDone = async (eventId: string, dateStr: string) => {
+    await fetch(`/api/events/${eventId}/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: dateStr }),
+    });
+    mutateEvents();
+  };
+
+  const eventOccursToday = (e: { date: string; recurring: string | null }) => {
+    const eDate = e.date.split("T")[0];
+    if (eDate === today) return true;
+    if (!e.recurring || today < eDate) return false;
+    const ed = new Date(eDate + "T00:00:00");
+    const cd = new Date(today + "T00:00:00");
+    switch (e.recurring) {
+      case "daily": return true;
+      case "weekly": return ed.getDay() === cd.getDay();
+      case "monthly": return ed.getDate() === cd.getDate();
+      case "yearly": return ed.getMonth() === cd.getMonth() && ed.getDate() === cd.getDate();
+      default: return false;
+    }
+  };
   const [sections, setSections] = useState<Record<string, boolean>>({
     overdue: true, dueToday: true, inProgress: true, highPriority: true, todayEvents: true, events: true, notes: true,
   });
@@ -190,7 +221,7 @@ export default function HomePage() {
 
       {/* Today Event */}
       {(() => {
-        const todayEvents = (events || []).filter((e) => e.date.startsWith(today));
+        const todayEvents = (events || []).filter(eventOccursToday);
         const typeIcons: Record<string, typeof Cake> = { birthday: Cake, meeting: Users, event: PartyPopper };
         return (
           <section className="mb-6">
@@ -204,16 +235,24 @@ export default function HomePage() {
               : <div className="card divide-y divide-rose-border">
                   {todayEvents.map((e) => {
                     const Icon = typeIcons[e.type] || CalendarHeart;
+                    const done = isEventDoneOnDate(e, today);
                     return (
                       <div key={e.id} className="flex items-center gap-3 py-3 px-4">
+                        <button onClick={() => toggleEventDone(e.id, today)} className="flex-shrink-0" title={done ? "Mark incomplete" : "Mark done"}>
+                          {done ? (
+                            <CheckCircle2 className="w-[18px] h-[18px]" style={{ color: e.color }} />
+                          ) : (
+                            <Circle className="w-[18px] h-[18px] text-rose-border hover:opacity-70 transition" style={{}} />
+                          )}
+                        </button>
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${e.color}18` }}>
                           <Icon className="w-4 h-4" style={{ color: e.color }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-rose-dark">{e.title}</p>
+                          <p className={`text-sm font-medium ${done ? "line-through text-rose-muted" : "text-rose-dark"}`}>{e.title}</p>
                           {e.time && <p className="text-xs text-rose-muted">{e.time}</p>}
                         </div>
-                        <span className="text-xs text-rose-deep font-medium flex-shrink-0">Today</span>
+                        {e.recurring && <span className="text-xs text-rose-muted flex-shrink-0 capitalize">{e.recurring}</span>}
                       </div>
                     );
                   })}
