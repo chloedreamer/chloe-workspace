@@ -10,7 +10,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const date = body.date || new Date().toISOString().split("T")[0];
+  let date = body.date;
+  if (!date) {
+    const now = new Date();
+    const offset = -now.getTimezoneOffset() * 60000;
+    date = new Date(now.getTime() + offset).toISOString().split("T")[0];
+  }
   const session = await prisma.focusSession.create({
     data: {
       date,
