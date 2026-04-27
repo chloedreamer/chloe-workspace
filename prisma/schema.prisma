@@ -20,6 +20,12 @@ model Task {
   updatedAt   DateTime   @updatedAt
   subtasks    Subtask[]
   comments    Comment[]
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([category])
+  @@index([updatedAt])
+  @@index([order])
 }
 
 model Subtask {
@@ -30,6 +36,8 @@ model Subtask {
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model Comment {
@@ -38,6 +46,8 @@ model Comment {
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model Project {
@@ -50,6 +60,8 @@ model Project {
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([order])
 }
 
 model Event {
@@ -66,6 +78,8 @@ model Event {
   completedDates String   @default("[]")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([date])
 }
 
 model FocusSession {
@@ -95,4 +109,6 @@ model Note {
   pinned    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([date])
 }

@@ -13,8 +13,36 @@ export async function PATCH(
   if (body.done !== undefined) data.done = body.done;
   if (body.order !== undefined) data.order = body.order;
 
-  const subtask = await prisma.subtask.update({ where: { id }, data });
-  return NextResponse.json(subtask);
+  // Single transaction: update subtask + cascade parent task status
+  const result = await prisma.$transaction(async (tx) => {
+    const subtask = await tx.subtask.update({ where: { id }, data });
+
+    if (body.done !== undefined) {
+      const siblings = await tx.subtask.findMany({
+        where: { taskId: subtask.taskId },
+        select: { done: true },
+      });
+      const allDone = siblings.length > 0 && siblings.every((s) => s.done);
+      const someDone = siblings.some((s) => s.done);
+
+      const parent = await tx.task.findUnique({
+        where: { id: subtask.taskId },
+        select: { status: true },
+      });
+
+      let newStatus: string | null = null;
+      if (allDone && parent?.status !== "done") newStatus = "done";
+      else if (!allDone && someDone && parent?.status === "done") newStatus = "in_progress";
+      else if (!allDone && !someDone && parent?.status === "done") newStatus = "todo";
+
+      if (newStatus) {
+        await tx.task.update({ where: { id: subtask.taskId }, data: { status: newStatus } });
+      }
+    }
+    return subtask;
+  });
+
+  return NextResponse.json(result);
 }
 
 export async function DELETE(

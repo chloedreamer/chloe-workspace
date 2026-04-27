@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const notes = await prisma.note.findMany({
     where,
     orderBy: [{ pinned: "desc" }, { updatedAt: "desc" }],
+    take: date ? undefined : 100,
   });
   return NextResponse.json(notes);
 }

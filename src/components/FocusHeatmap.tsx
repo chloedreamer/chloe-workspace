@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Brain, Flame, Clock, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface FocusSession {
   id: string;
@@ -37,7 +37,7 @@ function formatMinutes(m: number) {
 }
 
 export default function FocusHeatmap() {
-  const { data: sessions } = useSWR<FocusSession[]>("/api/focus", fetcher, { refreshInterval: 30000 });
+  const { data: sessions } = useSWR<FocusSession[]>("/api/focus", fetcher, { refreshInterval: 0, dedupingInterval: 60000 });
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -46,47 +46,58 @@ export default function FocusHeatmap() {
   });
   const [hoveredDay, setHoveredDay] = useState<{ date: string; minutes: number; count: number } | null>(null);
 
-  if (!sessions) return <div className="card p-5 h-64" />;
+  const { focusMap, totalHours } = useMemo(() => {
+    const map: Record<string, { minutes: number; count: number }> = {};
+    let totalMin = 0;
+    (sessions || []).forEach((s) => {
+      if (!map[s.date]) map[s.date] = { minutes: 0, count: 0 };
+      map[s.date].minutes += s.duration;
+      map[s.date].count += 1;
+      totalMin += s.duration;
+    });
+    return { focusMap: map, totalHours: Math.round((totalMin / 60) * 10) / 10 };
+  }, [sessions]);
 
-  const focusMap: Record<string, { minutes: number; count: number }> = {};
-  sessions.forEach((s) => {
-    if (!focusMap[s.date]) focusMap[s.date] = { minutes: 0, count: 0 };
-    focusMap[s.date].minutes += s.duration;
-    focusMap[s.date].count += 1;
-  });
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = getDateStr(today);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const todayStr = useMemo(() => getDateStr(today), [today]);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let i = 1; i <= daysInMonth; i++) days.push(i);
-  while (days.length < 42) days.push(null);
+  const { days, monthMinutes, currentStreak, isCurrentMonth } = useMemo(() => {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const ds: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) ds.push(null);
+    for (let i = 1; i <= daysInMonth; i++) ds.push(i);
+    while (ds.length < 42) ds.push(null);
+
+    const getCellDate = (day: number) => getDateStr(new Date(year, month, day));
+    let mm = 0;
+    for (let d = 1; d <= daysInMonth; d++) mm += focusMap[getCellDate(d)]?.minutes || 0;
+
+    let streak = 0;
+    const cur = new Date(today);
+    while ((focusMap[getDateStr(cur)]?.minutes || 0) > 0) {
+      streak++;
+      cur.setDate(cur.getDate() - 1);
+    }
+
+    return {
+      days: ds,
+      monthMinutes: mm,
+      currentStreak: streak,
+      isCurrentMonth: year === today.getFullYear() && month === today.getMonth(),
+    };
+  }, [year, month, focusMap, today]);
+
+  if (!sessions) return <div className="card p-5 h-64" />;
 
   const getCellDate = (day: number) => getDateStr(new Date(year, month, day));
-
-  let monthMinutes = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    monthMinutes += focusMap[getCellDate(d)]?.minutes || 0;
-  }
-
-  let currentStreak = 0;
-  const cur = new Date(today);
-  while ((focusMap[getDateStr(cur)]?.minutes || 0) > 0) {
-    currentStreak++;
-    cur.setDate(cur.getDate() - 1);
-  }
-
-  const totalMinutes = Object.values(focusMap).reduce((a, b) => a + b.minutes, 0);
-  const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
 
   return (
     <div className="card p-5">

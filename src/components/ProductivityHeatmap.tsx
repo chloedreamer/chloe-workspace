@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Flame, Target, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface Task {
   id: string;
@@ -37,52 +37,59 @@ export default function ProductivityHeatmap() {
   });
   const [hoveredDay, setHoveredDay] = useState<{ date: string; count: number } | null>(null);
 
-  if (!tasks) return <div className="card p-5 h-64" />;
+  const { completionMap, totalDone } = useMemo(() => {
+    const map: Record<string, number> = {};
+    let total = 0;
+    (tasks || []).forEach((t) => {
+      if (t.status === "done") {
+        const date = getDateStr(new Date(t.updatedAt));
+        map[date] = (map[date] || 0) + 1;
+        total++;
+      }
+    });
+    return { completionMap: map, totalDone: total };
+  }, [tasks]);
 
-  const completionMap: Record<string, number> = {};
-  tasks.forEach((t) => {
-    if (t.status === "done") {
-      const date = getDateStr(new Date(t.updatedAt));
-      completionMap[date] = (completionMap[date] || 0) + 1;
-    }
-  });
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = getDateStr(today);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const todayStr = useMemo(() => getDateStr(today), [today]);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let i = 1; i <= daysInMonth; i++) days.push(i);
-  while (days.length < 42) days.push(null);
+  const { days, monthCount, currentStreak, isCurrentMonth } = useMemo(() => {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const ds: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) ds.push(null);
+    for (let i = 1; i <= daysInMonth; i++) ds.push(i);
+    while (ds.length < 42) ds.push(null);
 
-  const getCellDate = (day: number) => {
-    const d = new Date(year, month, day);
-    return getDateStr(d);
-  };
+    const getCellDate = (day: number) => getDateStr(new Date(year, month, day));
+    let mc = 0;
+    for (let d = 1; d <= daysInMonth; d++) mc += completionMap[getCellDate(d)] || 0;
 
-  // Stats for this month
-  let monthCount = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    monthCount += completionMap[getCellDate(d)] || 0;
-  }
+    let streak = 0;
+    const cur = new Date(today);
+    while (completionMap[getDateStr(cur)] > 0) {
+      streak++;
+      cur.setDate(cur.getDate() - 1);
+    }
 
-  // Overall streak
-  let currentStreak = 0;
-  const cur = new Date(today);
-  while (completionMap[getDateStr(cur)] > 0) {
-    currentStreak++;
-    cur.setDate(cur.getDate() - 1);
-  }
+    return {
+      days: ds,
+      monthCount: mc,
+      currentStreak: streak,
+      isCurrentMonth: year === today.getFullYear() && month === today.getMonth(),
+    };
+  }, [year, month, completionMap, today]);
 
-  const totalDone = Object.values(completionMap).reduce((a, b) => a + b, 0);
+  if (!tasks) return <div className="card p-5 h-64" />;
 
-  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+  const getCellDate = (day: number) => getDateStr(new Date(year, month, day));
 
   return (
     <div className="card p-5">

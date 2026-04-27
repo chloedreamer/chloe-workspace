@@ -52,24 +52,14 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   };
 
   const toggleSubtask = async (sub: Subtask) => {
-    await fetch(`/api/subtasks/${sub.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: !sub.done }) });
-
-    // Auto-update task status based on subtasks
-    if (task) {
-      const updated = task.subtasks.map((s) => s.id === sub.id ? { ...s, done: !sub.done } : s);
-      const allDone = updated.length > 0 && updated.every((s) => s.done);
-      const someDone = updated.some((s) => s.done);
-
-      if (allDone && task.status !== "done") {
-        await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "done" }) });
-      } else if (!allDone && someDone && task.status === "done") {
-        await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "in_progress" }) });
-      } else if (!allDone && !someDone && task.status === "done") {
-        await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "todo" }) });
-      }
-    }
-
-    fetchTask(); onUpdate();
+    // Server now handles parent task cascade in single transaction
+    await fetch(`/api/subtasks/${sub.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !sub.done }),
+    });
+    fetchTask();
+    onUpdate();
   };
 
   const deleteSubtask = async (id: string) => { await fetch(`/api/subtasks/${id}`, { method: "DELETE" }); fetchTask(); onUpdate(); };
