@@ -52,10 +52,26 @@ export default function HomePage() {
     mutateTasks();
   }, [mutateTasks]);
 
-  const toggleSub = useCallback(async (id: string, done: boolean) => {
-    await fetch(`/api/subtasks/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: !done }) });
+  const toggleSub = useCallback(async (subtaskId: string, done: boolean, parentTaskId: string) => {
+    await fetch(`/api/subtasks/${subtaskId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: !done }) });
+
+    // Auto-update parent task status
+    const parent = tasks?.find((t) => t.id === parentTaskId);
+    if (parent) {
+      const updated = parent.subtasks.map((s) => s.id === subtaskId ? { ...s, done: !done } : s);
+      const allDone = updated.length > 0 && updated.every((s) => s.done);
+      const someDone = updated.some((s) => s.done);
+
+      if (allDone && parent.status !== "done") {
+        await fetch(`/api/tasks/${parentTaskId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "done" }) });
+      } else if (!allDone && someDone && parent.status === "done") {
+        await fetch(`/api/tasks/${parentTaskId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "in_progress" }) });
+      } else if (!allDone && !someDone && parent.status === "done") {
+        await fetch(`/api/tasks/${parentTaskId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "todo" }) });
+      }
+    }
     mutateTasks();
-  }, [mutateTasks]);
+  }, [mutateTasks, tasks]);
 
   if (!tasks) return <TodaySkeleton />;
 
@@ -103,7 +119,7 @@ export default function HomePage() {
         {showSubs && totalS > 0 && (
           <div className="ml-10 mb-2 space-y-1">
             {task.subtasks.map((s) => (
-              <button key={s.id} onClick={() => toggleSub(s.id, s.done)} className="flex items-center gap-2 w-full text-left py-1 px-2 rounded hover:bg-rose-light transition">
+              <button key={s.id} onClick={() => toggleSub(s.id, s.done, task.id)} className="flex items-center gap-2 w-full text-left py-1 px-2 rounded hover:bg-rose-light transition">
                 {s.done ? <CheckCircle2 className="w-3.5 h-3.5 text-rose-deep" /> : <Circle className="w-3.5 h-3.5 text-rose-border" />}
                 <span className={`text-xs ${s.done ? "line-through text-rose-muted" : "text-rose-dark"}`}>{s.title}</span>
               </button>
