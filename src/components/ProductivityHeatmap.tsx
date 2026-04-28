@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { Flame, Target, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface Task {
@@ -94,10 +94,7 @@ export default function ProductivityHeatmap() {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-rose" />
-          <h2 className="text-sm font-medium text-rose-deep">Productivity</h2>
-        </div>
+        <h2 className="text-sm font-medium text-rose-deep">Productivity</h2>
         <div className="flex items-center gap-1">
           <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="p-1 rounded hover:bg-rose-light text-rose-muted">
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -118,10 +115,7 @@ export default function ProductivityHeatmap() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>
-          <div className="flex items-center gap-1 mb-1">
-            <Flame className="w-3 h-3 text-orange-500" />
-            <span className="text-[10px] text-rose-muted uppercase tracking-wider">Streak</span>
-          </div>
+          <span className="text-[10px] text-rose-muted uppercase tracking-wider block mb-1">Streak</span>
           <p className="text-lg font-semibold text-rose-dark">{currentStreak}</p>
         </div>
         <div>

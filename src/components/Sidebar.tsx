@@ -2,31 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  KanbanSquare,
-  StickyNote,
-  Calendar,
-  CalendarDays,
-  CalendarHeart,
-  Sparkles,
-  FolderOpen,
-  Plus,
-  ExternalLink,
-  Globe,
-  Shield,
-  ShoppingBag,
-  Settings,
-} from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { useProjects } from "@/components/ProjectsProvider";
 import { useState } from "react";
 import GlobalSearch from "@/components/GlobalSearch";
 
 const navItems = [
-  { href: "/", label: "Today", icon: CalendarDays },
-  { href: "/tasks", label: "Tasks", icon: KanbanSquare },
-  { href: "/notes", label: "Notes", icon: StickyNote },
-  { href: "/events", label: "Schedule", icon: CalendarHeart },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/", label: "Today" },
+  { href: "/tasks", label: "Tasks" },
+  { href: "/notes", label: "Notes" },
+  { href: "/events", label: "Schedule" },
+  { href: "/calendar", label: "Calendar" },
+];
+
+const shortcuts = [
+  { href: "https://timeless-vn.vercel.app", label: "Timeless" },
+  { href: "https://timeless-admin.vercel.app", label: "Admin" },
+  { href: "https://timeless-shopee.vercel.app", label: "Link Shopee" },
 ];
 
 export default function Sidebar() {
@@ -50,12 +42,9 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white flex flex-col h-screen fixed left-0 top-0 z-30">
       <div className="p-6">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-rose" />
-          <h1 className="text-base font-semibold text-rose-deep tracking-tight">
-            Chloe Workspace
-          </h1>
-        </div>
+        <h1 className="text-base font-semibold text-rose-deep tracking-tight">
+          Chloe Workspace
+        </h1>
       </div>
 
       <div className="px-3 mb-3">
@@ -72,27 +61,24 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+                className={`sidebar-link flex items-center px-3 py-2 rounded-lg text-sm ${
                   isActive ? "active" : "text-rose-muted hover:text-rose-deep"
                 }`}
               >
-                <item.icon className="w-4 h-4" />
                 {item.label}
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-8 mb-2 px-3 flex items-center justify-between group">
+        <div className="mt-8 mb-2 px-3 flex items-center justify-between">
           <Link
             href="/projects"
-            className={`flex items-center gap-2 text-xs font-medium transition ${
+            className={`text-xs font-medium uppercase tracking-wider transition ${
               pathname === "/projects" ? "text-rose-deep" : "text-rose-muted hover:text-rose-deep"
             }`}
           >
-            <FolderOpen className="w-3.5 h-3.5" />
             Projects
-            <Settings className="w-3 h-3 opacity-0 group-hover:opacity-60 transition" />
           </Link>
           <button
             onClick={() => setShowQuickAdd(!showQuickAdd)}
@@ -135,42 +121,24 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Shortcuts */}
-        <div className="mt-8 mb-2 px-3 flex items-center gap-2 text-xs font-medium text-rose-muted">
-          <ExternalLink className="w-3.5 h-3.5" />
-          Shortcuts
+        <div className="mt-8 mb-2 px-3">
+          <span className="text-xs font-medium text-rose-muted uppercase tracking-wider">
+            Shortcuts
+          </span>
         </div>
         <div className="space-y-0.5">
-          <a
-            href="https://timeless-vn.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
-          >
-            <Globe className="w-4 h-4" />
-            <span className="flex-1">Timeless</span>
-            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
-          </a>
-          <a
-            href="https://timeless-admin.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
-          >
-            <Shield className="w-4 h-4" />
-            <span className="flex-1">Admin</span>
-            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
-          </a>
-          <a
-            href="https://timeless-shopee.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sidebar-link flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            <span className="flex-1">Link Shopee</span>
-            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
-          </a>
+          {shortcuts.map((s) => (
+            <a
+              key={s.href}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sidebar-link flex items-center px-3 py-1.5 rounded-lg text-sm text-rose-muted hover:text-rose-deep group"
+            >
+              <span className="flex-1">{s.label}</span>
+              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-50 transition" />
+            </a>
+          ))}
         </div>
       </nav>
     </aside>

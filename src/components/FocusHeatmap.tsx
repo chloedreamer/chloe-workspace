@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { Brain, Flame, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface FocusSession {
@@ -102,10 +102,7 @@ export default function FocusHeatmap() {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-blue-500" />
-          <h2 className="text-sm font-medium text-rose-deep">Focus</h2>
-        </div>
+        <h2 className="text-sm font-medium text-rose-deep">Focus</h2>
         <div className="flex items-center gap-1">
           <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="p-1 rounded hover:bg-rose-light text-rose-muted">
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -126,17 +123,11 @@ export default function FocusHeatmap() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>
-          <div className="flex items-center gap-1 mb-1">
-            <Flame className="w-3 h-3 text-orange-500" />
-            <span className="text-[10px] text-rose-muted uppercase tracking-wider">Streak</span>
-          </div>
+          <span className="text-[10px] text-rose-muted uppercase tracking-wider block mb-1">Streak</span>
           <p className="text-lg font-semibold text-rose-dark">{currentStreak}</p>
         </div>
         <div>
-          <div className="flex items-center gap-1 mb-1">
-            <Clock className="w-3 h-3 text-blue-500" />
-            <span className="text-[10px] text-rose-muted uppercase tracking-wider">This Month</span>
-          </div>
+          <span className="text-[10px] text-rose-muted uppercase tracking-wider block mb-1">This Month</span>
           <p className="text-lg font-semibold text-rose-dark">{formatMinutes(monthMinutes)}</p>
         </div>
         <div>

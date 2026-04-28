@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { Sunrise, CheckCircle2, Circle, X, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, X, Plus } from "lucide-react";
 
 interface IntentionItem {
   text: string;
@@ -81,7 +81,6 @@ export default function DailyIntention() {
     <div className="card p-5 mb-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Sunrise className="w-4 h-4 text-rose" />
           <h2 className="text-sm font-medium text-rose-deep">Daily Intention</h2>
           {items.length > 0 && (
             <span className="text-xs text-rose-muted">{doneCount}/{items.length}</span>
@@ -90,9 +89,8 @@ export default function DailyIntention() {
         {isEvening && items.length > 0 && (
           <button
             onClick={() => setShowReflection(!showReflection)}
-            className="text-xs text-rose-deep hover:underline flex items-center gap-1"
+            className="text-xs text-rose-deep hover:underline"
           >
-            <Sparkles className="w-3 h-3" />
             Reflect
           </button>
         )}
