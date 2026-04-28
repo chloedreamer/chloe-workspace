@@ -64,7 +64,7 @@ export default function LoginPage() {
       }}
     >
       <div className="w-full max-w-xs">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <h1
             className="font-extralight text-rose-deep"
             style={{ fontSize: "1.4rem", letterSpacing: "0.4em" }}
@@ -74,6 +74,7 @@ export default function LoginPage() {
           <p className="text-xs text-rose-muted mt-2 tracking-widest uppercase">
             Workspace
           </p>
+          <p className="text-sm text-rose-muted mt-6">Enter your 6-digit PIN</p>
         </div>
 
         {/* PIN dots */}
