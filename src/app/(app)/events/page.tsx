@@ -74,11 +74,11 @@ export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", date: "", time: "", type: "event",
-    color: "#9b6b6b", recurring: "", reminder: false,
+    color: "#9b6b6b", recurring: "", endDate: "", reminder: false,
   });
 
   const resetForm = () => {
-    setForm({ title: "", description: "", date: "", time: "", type: "event", color: "#9b6b6b", recurring: "", reminder: false });
+    setForm({ title: "", description: "", date: "", time: "", type: "event", color: "#9b6b6b", recurring: "", endDate: "", reminder: false });
     setEditingEvent(null);
   };
 
@@ -121,6 +121,7 @@ export default function EventsPage() {
       type: e.type,
       color: e.color,
       recurring: e.recurring || "",
+      endDate: e.endDate ? e.endDate.split("T")[0] : "",
       reminder: e.reminder,
     });
     setShowForm(true);
@@ -140,7 +141,12 @@ export default function EventsPage() {
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className="text-xs text-rose-muted">{formatEventDate(event.date)}</span>
             {event.time && <span className="text-xs text-rose-muted">· {event.time}</span>}
-            {event.recurring && <span className="text-xs text-rose-deep">· {RECURRING_OPTIONS.find((r) => r.key === event.recurring)?.label}</span>}
+            {event.recurring && (
+              <span className="text-xs text-rose-deep">
+                · {RECURRING_OPTIONS.find((r) => r.key === event.recurring)?.label}
+                {event.endDate ? ` until ${formatEventDate(event.endDate)}` : ""}
+              </span>
+            )}
           </div>
           {event.description && <p className="text-xs text-rose-muted mt-1">{event.description}</p>}
         </div>
@@ -223,11 +229,32 @@ export default function EventsPage() {
                 </div>
                 <div>
                   <label className="text-xs text-rose-muted mb-1 block">Repeat</label>
-                  <select value={form.recurring} onChange={(e) => setForm({ ...form, recurring: e.target.value })} className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose">
+                  <select value={form.recurring} onChange={(e) => setForm({ ...form, recurring: e.target.value, endDate: e.target.value ? form.endDate : "" })} className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose">
                     {RECURRING_OPTIONS.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
                   </select>
                 </div>
               </div>
+              {form.recurring && (
+                <div>
+                  <label className="text-xs text-rose-muted mb-1 block flex items-center justify-between">
+                    <span>End date</span>
+                    {form.endDate && (
+                      <button type="button" onClick={() => setForm({ ...form, endDate: "" })} className="text-xs text-rose-deep hover:underline">
+                        Forever (no end)
+                      </button>
+                    )}
+                  </label>
+                  <input
+                    type="date"
+                    value={form.endDate}
+                    min={form.date || undefined}
+                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    placeholder="Forever"
+                    className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose"
+                  />
+                  {!form.endDate && <p className="text-xs text-rose-muted mt-1">Leave blank to repeat forever</p>}
+                </div>
+              )}
               <div>
                 <label className="text-xs text-rose-muted mb-1 block">Color</label>
                 <div className="flex items-center gap-2">

@@ -16,7 +16,7 @@ import TaskRow, { type Task } from "@/components/TaskRow";
 
 interface Note { id: string; title: string; content: string; date: string; category: string; }
 interface Event {
-  id: string; title: string; date: string; time: string | null;
+  id: string; title: string; date: string; endDate: string | null; time: string | null;
   type: string; color: string; recurring: string | null; completedDates: string;
 }
 
@@ -32,6 +32,8 @@ function eventOccursOn(e: Event, dateStr: string): boolean {
   const eDate = e.date.split("T")[0];
   if (eDate === dateStr) return true;
   if (!e.recurring || dateStr < eDate) return false;
+  // Respect end date
+  if (e.endDate && dateStr > e.endDate.split("T")[0]) return false;
   const ed = new Date(eDate + "T00:00:00");
   const cd = new Date(dateStr + "T00:00:00");
   switch (e.recurring) {

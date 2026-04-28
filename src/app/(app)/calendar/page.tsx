@@ -24,6 +24,7 @@ interface Event {
   id: string;
   title: string;
   date: string;
+  endDate: string | null;
   time: string | null;
   type: string;
   color: string;
@@ -51,6 +52,7 @@ function eventOccursOnDate(event: Event, dateStr: string): boolean {
   const eventDate = event.date.split("T")[0];
   if (eventDate === dateStr) return true;
   if (!event.recurring || dateStr < eventDate) return false;
+  if (event.endDate && dateStr > event.endDate.split("T")[0]) return false;
 
   const ed = new Date(eventDate + "T00:00:00");
   const cd = new Date(dateStr + "T00:00:00");
