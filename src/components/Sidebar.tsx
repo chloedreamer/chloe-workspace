@@ -8,7 +8,6 @@ import {
   Calendar,
   CalendarDays,
   CalendarHeart,
-  Settings,
   Sparkles,
   FolderOpen,
   Plus,
@@ -16,6 +15,7 @@ import {
   Globe,
   Shield,
   ShoppingBag,
+  Settings,
 } from "lucide-react";
 import { useProjects } from "@/components/ProjectsProvider";
 import { useState } from "react";
@@ -83,14 +83,21 @@ export default function Sidebar() {
           })}
         </div>
 
-        <div className="mt-8 mb-2 px-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-medium text-rose-muted">
+        <div className="mt-8 mb-2 px-3 flex items-center justify-between group">
+          <Link
+            href="/projects"
+            className={`flex items-center gap-2 text-xs font-medium transition ${
+              pathname === "/projects" ? "text-rose-deep" : "text-rose-muted hover:text-rose-deep"
+            }`}
+          >
             <FolderOpen className="w-3.5 h-3.5" />
             Projects
-          </div>
+            <Settings className="w-3 h-3 opacity-0 group-hover:opacity-60 transition" />
+          </Link>
           <button
             onClick={() => setShowQuickAdd(!showQuickAdd)}
             className="p-1 rounded hover:bg-rose-light text-rose-muted hover:text-rose-deep transition"
+            title="Quick add"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -166,18 +173,6 @@ export default function Sidebar() {
           </a>
         </div>
       </nav>
-
-      <div className="p-3">
-        <Link
-          href="/settings"
-          className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-            pathname === "/settings" ? "active" : "text-rose-muted hover:text-rose-deep"
-          }`}
-        >
-          <Settings className="w-4 h-4" />
-          Settings
-        </Link>
-      </div>
     </aside>
   );
 }
