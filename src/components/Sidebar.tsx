@@ -10,7 +10,6 @@ import GlobalSearch from "@/components/GlobalSearch";
 const navItems = [
   { href: "/", label: "Today" },
   { href: "/tasks", label: "Tasks" },
-  { href: "/notes", label: "Notes" },
   { href: "/events", label: "Schedule" },
   { href: "/calendar", label: "Calendar" },
 ];
