@@ -5,15 +5,22 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 export function proxy(request: NextRequest) {
   const cookie = request.cookies.get("ws_auth")?.value;
-  const token = process.env.ACCESS_TOKEN;
+  const pin = process.env.ACCESS_PIN;
 
-  // No token configured → allow (safety net during local dev)
-  if (!token) return NextResponse.next();
+  // No PIN configured → allow (safety net during local dev)
+  if (!pin) return NextResponse.next();
 
-  // Already authenticated → renew cookie on every request (sliding expiration)
-  if (cookie === token) {
+  const path = request.nextUrl.pathname;
+
+  // Always allow login page and login API
+  if (path === "/login" || path.startsWith("/api/auth/")) {
+    return NextResponse.next();
+  }
+
+  // Authenticated → renew sliding cookie
+  if (cookie === pin) {
     const res = NextResponse.next();
-    res.cookies.set("ws_auth", token, {
+    res.cookies.set("ws_auth", pin, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
@@ -23,13 +30,10 @@ export function proxy(request: NextRequest) {
     return res;
   }
 
-  // Allow unlock endpoint
-  if (request.nextUrl.pathname.startsWith("/api/unlock")) {
-    return NextResponse.next();
-  }
-
-  // Block everything else: return 404 to avoid leaking app existence
-  return new NextResponse("Not Found", { status: 404 });
+  // Not authenticated → redirect to login
+  const url = request.nextUrl.clone();
+  url.pathname = "/login";
+  return NextResponse.redirect(url);
 }
 
 export const config = {
