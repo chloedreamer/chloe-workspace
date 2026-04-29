@@ -18,6 +18,7 @@ const shortcuts = [
   { href: "https://timeless-vn.vercel.app", label: "Timeless" },
   { href: "https://timeless-admin.vercel.app", label: "Admin" },
   { href: "https://timeless-shopee.vercel.app", label: "Link Shopee" },
+  { href: "https://docs.google.com/spreadsheets/d/1asQMcrEzuvYNDmid1-wBlVU_JtZgauLs/edit?gid=1786497094#gid=1786497094", label: "S1A" },
 ];
 
 export default function Sidebar() {
