@@ -28,13 +28,13 @@ interface Birthday {
 }
 
 const PILATES_CLASS_SCHEDULE: Record<number, number[]> = {
-  0: [],
-  1: [10, 12, 17, 18, 19],
+  0: [17, 19],
+  1: [17, 19],
   2: [17, 19],
-  3: [10, 12, 17, 18, 19],
+  3: [17, 19],
   4: [17, 19],
-  5: [10, 12, 17, 18, 19],
-  6: [10, 17],
+  5: [17, 19],
+  6: [17, 19],
 };
 
 function getLocalDate() {
