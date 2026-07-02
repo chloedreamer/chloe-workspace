@@ -112,3 +112,38 @@ model Note {
 
   @@index([date])
 }
+
+model PilatesSession {
+  id        String   @id @default(cuid())
+  date      String
+  time      String?
+  type      String   @default("Mat")
+  duration  Int      @default(60)
+  intensity String   @default("medium")
+  focus     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+}
+
+model PilatesGoal {
+  id        String   @id @default(cuid())
+  yearMonth String   @unique
+  target    Int      @default(16)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Birthday {
+  id        String   @id @default(cuid())
+  name      String
+  date      String
+  notes     String?
+  color     String   @default("#c8a0a0")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+}

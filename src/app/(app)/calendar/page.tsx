@@ -32,6 +32,14 @@ interface Event {
   completedDates: string;
 }
 
+interface PilatesSession {
+  id: string;
+  date: string;
+  time: string | null;
+  type: string;
+  intensity: string;
+}
+
 function isEventCompleted(event: Event, dateStr: string): boolean {
   try {
     const arr = JSON.parse(event.completedDates || "[]");
@@ -79,6 +87,7 @@ export default function CalendarPage() {
   const { data: tasks } = useSWR<Task[]>("/api/tasks", fetcher);
   const { data: notes } = useSWR<Note[]>("/api/notes", fetcher);
   const { data: events, mutate: mutateEvents } = useSWR<Event[]>("/api/events", fetcher);
+  const { data: pilates } = useSWR<PilatesSession[]>("/api/pilates", fetcher);
 
   const toggleEventComplete = async (eventId: string, dateStr: string) => {
     await fetch(`/api/events/${eventId}/complete`, {
@@ -105,6 +114,7 @@ export default function CalendarPage() {
     dayTasks: (tasks || []).filter((t) => t.dueDate && t.dueDate.startsWith(dateStr)),
     dayNotes: (notes || []).filter((n) => n.date === dateStr),
     dayEvents: (events || []).filter((e) => eventOccursOnDate(e, dateStr)),
+    dayPilates: (pilates || []).filter((p) => p.date === dateStr),
   });
 
   const selectedItems = selectedDate ? getItemsForDate(selectedDate) : null;
@@ -138,9 +148,15 @@ export default function CalendarPage() {
             const dateStr = getDateStr(day);
             const isToday = dateStr === today;
             const isSelected = dateStr === selectedDate;
-            const { dayTasks, dayNotes, dayEvents } = getItemsForDate(dateStr);
+            const { dayTasks, dayNotes, dayEvents, dayPilates } = getItemsForDate(dateStr);
             const items = [
               ...dayEvents.map((e) => ({ key: `e-${e.id}`, title: e.time ? `${e.time} ${e.title}` : e.title, color: e.color, isEvent: true })),
+              ...dayPilates.map((p) => ({
+                key: `p-${p.id}`,
+                title: `${p.time ? p.time.slice(0, 5) + " " : ""}Pilates ${p.type.toLowerCase()}`.trim(),
+                color: "#9b6b6b",
+                isEvent: false,
+              })),
               ...dayTasks.map((t) => {
                 const proj = projects.find((p) => p.key === t.category);
                 return { key: `t-${t.id}`, title: t.title, color: proj?.color || "#9ca3af", isEvent: false };
@@ -173,7 +189,7 @@ export default function CalendarPage() {
           <h2 className="text-lg font-semibold text-rose-dark mb-4">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </h2>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <h3 className="text-sm font-semibold text-rose-muted mb-2">Events ({selectedItems.dayEvents.length})</h3>
               {selectedItems.dayEvents.length === 0 ? <p className="text-sm text-rose-muted">No events</p> : (
@@ -211,6 +227,19 @@ export default function CalendarPage() {
               {selectedItems.dayNotes.length === 0 ? <p className="text-sm text-rose-muted">No notes</p> : (
                 <div className="space-y-2">
                   {selectedItems.dayNotes.map((n) => <div key={n.id} className="p-2 rounded-lg bg-rose-light text-sm text-rose-dark">{n.title || "Untitled"}</div>)}
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-rose-muted mb-2">Pilates ({selectedItems.dayPilates.length})</h3>
+              {selectedItems.dayPilates.length === 0 ? <p className="text-sm text-rose-muted">No sessions</p> : (
+                <div className="space-y-2">
+                  {selectedItems.dayPilates.map((p) => (
+                    <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg bg-rose-deep/10 text-sm text-rose-dark">
+                      <div className="w-1.5 h-1.5 rounded-full bg-rose-deep flex-shrink-0" />
+                      <span>{p.time ? p.time.slice(0, 5) : ""} · Pilates {p.type.toLowerCase()}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

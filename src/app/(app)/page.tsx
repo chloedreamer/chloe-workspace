@@ -19,6 +19,23 @@ interface Event {
   id: string; title: string; date: string; endDate: string | null; time: string | null;
   type: string; color: string; recurring: string | null; completedDates: string;
 }
+interface PilatesSession {
+  id: string; date: string; time: string | null; type: string;
+  duration: number; intensity: string; focus: string | null; notes: string | null;
+}
+interface Birthday {
+  id: string; name: string; date: string; notes: string | null; color: string;
+}
+
+const PILATES_CLASS_SCHEDULE: Record<number, number[]> = {
+  0: [],
+  1: [10, 12, 17, 18, 19],
+  2: [17, 19],
+  3: [10, 12, 17, 18, 19],
+  4: [17, 19],
+  5: [10, 12, 17, 18, 19],
+  6: [10, 17],
+};
 
 function getLocalDate() {
   const d = new Date();
@@ -58,10 +75,12 @@ export default function HomePage() {
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher);
   const { data: notes } = useSWR<Note[]>(`/api/notes?date=${today}`, fetcher);
   const { data: events, mutate: mutateEvents } = useSWR<Event[]>("/api/events", fetcher);
+  const { data: pilatesToday, mutate: mutatePilates } = useSWR<PilatesSession[]>(`/api/pilates?date=${today}`, fetcher);
+  const { data: birthdays } = useSWR<Birthday[]>("/api/birthdays", fetcher);
 
   const [sections, setSections] = useState<Record<string, boolean>>({
     overdue: true, dueToday: true, inProgress: true, highPriority: true,
-    todayEvents: true, events: true, notes: true,
+    todayEvents: true, events: true, notes: true, pilates: true, birthdays: true,
   });
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
@@ -153,6 +172,23 @@ export default function HomePage() {
     [events, today]
   );
 
+  const upcomingBirthdays = useMemo(() => {
+    const list = birthdays || [];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return list
+      .map((b) => {
+        const [year, month, day] = b.date.split("-").map(Number);
+        let next = new Date(now.getFullYear(), month - 1, day);
+        if (next < now) next = new Date(now.getFullYear() + 1, month - 1, day);
+        const daysUntil = Math.round((next.getTime() - now.getTime()) / 86400000);
+        const age = next.getFullYear() - year;
+        return { ...b, daysUntil, age, nextDate: next };
+      })
+      .filter((b) => b.daysUntil <= 31)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [birthdays]);
+
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -210,14 +246,6 @@ export default function HomePage() {
         <p className="text-rose-muted text-sm mt-1">{dateLabel}</p>
       </div>
 
-      {/* Overview */}
-      <p className="text-xs text-rose-muted uppercase tracking-wider mb-2">Overview</p>
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <ProductivityHeatmap />
-        <FocusHeatmap />
-      </div>
-
-      <QuoteCard />
       <DailyIntention />
 
       {/* SP2 Countdown */}
@@ -273,6 +301,100 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+
+      {/* Today Pilates */}
+      <section className="mb-6">
+        <button onClick={() => toggle("pilates")} className="flex items-center gap-2 mb-3 w-full text-left">
+          <div className="w-2 h-2 rounded-full bg-rose-deep" />
+          <h2 className="text-sm font-medium text-rose-deep">Pilates hôm nay ({(pilatesToday || []).length})</h2>
+          {sections.pilates ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+          <Link href="/pilates" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            All <ArrowRight className="w-3 h-3" />
+          </Link>
+        </button>
+        {sections.pilates && (() => {
+          const attended = (pilatesToday || []).filter((s) => s.time);
+          if (attended.length === 0) {
+            return <div className="card p-5 text-center text-sm text-rose-muted">Hôm nay chưa có ca tập</div>;
+          }
+          attended.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+          return (
+            <div className="card p-4">
+              <div className="flex flex-wrap gap-2">
+                {attended.map((s) => {
+                  const h = parseInt((s.time as string).split(":")[0]);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={async () => {
+                        await fetch(`/api/pilates/${s.id}`, { method: "DELETE" });
+                        mutatePilates();
+                      }}
+                      title="Click để bỏ chọn"
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition border bg-rose-deep text-white border-rose-deep font-medium hover:opacity-90"
+                    >
+                      <span className="inline-block w-2 h-2 rounded-full bg-white" />
+                      <span>{h}h</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {attended.filter((s) => s.notes).length > 0 && (
+                <div className="text-xs text-rose-muted space-y-1 mt-2 pt-2 border-t border-rose-border">
+                  {attended
+                    .filter((s) => s.notes)
+                    .map((s) => (
+                      <div key={s.id}>
+                        <span className="text-rose-deep">{s.time}</span> · {s.notes}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </section>
+
+      {/* Upcoming Birthdays */}
+      {upcomingBirthdays.length > 0 && (
+        <section className="mb-6">
+          <button onClick={() => toggle("birthdays")} className="flex items-center gap-2 mb-3 w-full text-left">
+            <div className="w-2 h-2 rounded-full bg-rose-deep" />
+            <h2 className="text-sm font-medium text-rose-deep">
+              Sinh nhật sắp tới ({upcomingBirthdays.length})
+            </h2>
+            {sections.birthdays ? <ChevronUp className="w-3.5 h-3.5 text-rose-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-rose-muted" />}
+            <Link href="/birthdays" className="text-xs text-rose-deep hover:underline ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              All <ArrowRight className="w-3 h-3" />
+            </Link>
+          </button>
+          {sections.birthdays && (
+            <div className="card divide-y divide-rose-border">
+              {upcomingBirthdays.map((b) => (
+                <div key={b.id} className="flex items-center gap-3 py-3 px-4">
+                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-rose-dark">
+                      {b.name}
+                      {b.daysUntil === 0 && <span className="ml-2 text-rose-deep">🎂 Hôm nay!</span>}
+                    </p>
+                    <p className="text-xs text-rose-muted mt-0.5">
+                      Tròn {b.age} tuổi
+                    </p>
+                  </div>
+                  <span className="text-xs text-rose-muted flex-shrink-0">
+                    {b.daysUntil === 0
+                      ? "Today"
+                      : b.daysUntil === 1
+                      ? "Tomorrow"
+                      : `${b.daysUntil} ngày`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Upcoming Events */}
       {upcomingEvents.length > 0 && (
@@ -343,6 +465,15 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+
+      {/* Overview — chuyen xuong cuoi trang */}
+      <p className="text-xs text-rose-muted uppercase tracking-wider mb-2 mt-8">Overview</p>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <ProductivityHeatmap />
+        <FocusHeatmap />
+      </div>
+
+      <QuoteCard />
 
       <TaskDetailPanel
         taskId={selectedTaskId}

@@ -12,6 +12,8 @@ const navItems = [
   { href: "/tasks", label: "Tasks" },
   { href: "/events", label: "Schedule" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/pilates", label: "Pilates" },
+  { href: "/birthdays", label: "Sinh nhật" },
 ];
 
 const shortcuts = [
