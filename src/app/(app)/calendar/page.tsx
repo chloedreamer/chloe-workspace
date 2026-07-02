@@ -40,6 +40,25 @@ interface PilatesSession {
   intensity: string;
 }
 
+interface Birthday {
+  id: string;
+  name: string;
+  date: string;
+  color: string;
+}
+
+function birthdayOccursOnDate(b: Birthday, dateStr: string): boolean {
+  const [, bMonth, bDay] = b.date.split("-");
+  const [, cMonth, cDay] = dateStr.split("-");
+  return bMonth === cMonth && bDay === cDay;
+}
+
+function calculateAge(birthDate: string, occurrenceDate: string): number {
+  const [byear] = birthDate.split("-").map(Number);
+  const [oyear] = occurrenceDate.split("-").map(Number);
+  return oyear - byear;
+}
+
 function isEventCompleted(event: Event, dateStr: string): boolean {
   try {
     const arr = JSON.parse(event.completedDates || "[]");
@@ -88,6 +107,7 @@ export default function CalendarPage() {
   const { data: notes } = useSWR<Note[]>("/api/notes", fetcher);
   const { data: events, mutate: mutateEvents } = useSWR<Event[]>("/api/events", fetcher);
   const { data: pilates } = useSWR<PilatesSession[]>("/api/pilates", fetcher);
+  const { data: birthdays } = useSWR<Birthday[]>("/api/birthdays", fetcher);
 
   const toggleEventComplete = async (eventId: string, dateStr: string) => {
     await fetch(`/api/events/${eventId}/complete`, {
@@ -115,6 +135,7 @@ export default function CalendarPage() {
     dayNotes: (notes || []).filter((n) => n.date === dateStr),
     dayEvents: (events || []).filter((e) => eventOccursOnDate(e, dateStr)),
     dayPilates: (pilates || []).filter((p) => p.date === dateStr),
+    dayBirthdays: (birthdays || []).filter((b) => birthdayOccursOnDate(b, dateStr)),
   });
 
   const selectedItems = selectedDate ? getItemsForDate(selectedDate) : null;
@@ -148,8 +169,14 @@ export default function CalendarPage() {
             const dateStr = getDateStr(day);
             const isToday = dateStr === today;
             const isSelected = dateStr === selectedDate;
-            const { dayTasks, dayNotes, dayEvents, dayPilates } = getItemsForDate(dateStr);
+            const { dayTasks, dayNotes, dayEvents, dayPilates, dayBirthdays } = getItemsForDate(dateStr);
             const items = [
+              ...dayBirthdays.map((b) => ({
+                key: `b-${b.id}`,
+                title: `🎂 ${b.name}`,
+                color: b.color,
+                isEvent: false,
+              })),
               ...dayEvents.map((e) => ({ key: `e-${e.id}`, title: e.time ? `${e.time} ${e.title}` : e.title, color: e.color, isEvent: true })),
               ...dayPilates.map((p) => ({
                 key: `p-${p.id}`,
@@ -190,6 +217,25 @@ export default function CalendarPage() {
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {selectedItems.dayBirthdays.length > 0 && (
+              <div className="col-span-2 md:col-span-4">
+                <h3 className="text-sm font-semibold text-rose-muted mb-2">🎂 Sinh nhật ({selectedItems.dayBirthdays.length})</h3>
+                <div className="space-y-2">
+                  {selectedItems.dayBirthdays.map((b) => {
+                    const age = calculateAge(b.date, selectedDate);
+                    return (
+                      <div key={b.id} className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: `${b.color}18` }}>
+                        <div className="w-1 h-8 rounded-full" style={{ backgroundColor: b.color }} />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-rose-dark">{b.name}</p>
+                          <p className="text-xs text-rose-muted">Tròn {age} tuổi</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div>
               <h3 className="text-sm font-semibold text-rose-muted mb-2">Events ({selectedItems.dayEvents.length})</h3>
               {selectedItems.dayEvents.length === 0 ? <p className="text-sm text-rose-muted">No events</p> : (
