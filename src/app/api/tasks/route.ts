@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
       priority: body.priority || "medium",
       category: body.category || "general",
       order: body.order || 0,
+      pomodoroEstimate: Math.max(0, Number(body.pomodoroEstimate) || 0),
+      pomodoroSpent: Math.max(0, Number(body.pomodoroSpent) || 0),
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
     },
     include: {

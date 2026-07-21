@@ -8,18 +8,20 @@ datasource db {
 }
 
 model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      String     @default("todo")
-  priority    String     @default("medium")
-  category    String     @default("general")
-  order       Int        @default(0)
-  dueDate     DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  subtasks    Subtask[]
-  comments    Comment[]
+  id               String     @id @default(cuid())
+  title            String
+  description      String?
+  status           String     @default("todo")
+  priority         String     @default("medium")
+  category         String     @default("general")
+  order            Int        @default(0)
+  dueDate          DateTime?
+  pomodoroEstimate Int        @default(0)
+  pomodoroSpent    Int        @default(0)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  subtasks         Subtask[]
+  comments         Comment[]
 
   @@index([status])
   @@index([dueDate])
@@ -29,13 +31,15 @@ model Task {
 }
 
 model Subtask {
-  id        String   @id @default(cuid())
-  title     String
-  done      Boolean  @default(false)
-  order     Int      @default(0)
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id               String   @id @default(cuid())
+  title            String
+  done             Boolean  @default(false)
+  order            Int      @default(0)
+  pomodoroEstimate Int      @default(0)
+  pomodoroSpent    Int      @default(0)
+  taskId           String
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
 
   @@index([taskId])
 }

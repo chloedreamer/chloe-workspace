@@ -5,14 +5,22 @@ import { COLUMNS, PRIORITIES, getProjectBadgeStyle } from "@/lib/constants";
 import { useProjects } from "@/components/ProjectsProvider";
 import {
   X, Plus, Trash2, CheckSquare, Square, MessageSquare, Send,
-  Calendar, Tag, Flag, Layers,
+  Calendar, Tag, Flag, Layers, Minus,
 } from "lucide-react";
 
-interface Subtask { id: string; title: string; done: boolean; order: number; }
+interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+  order: number;
+  pomodoroEstimate: number;
+  pomodoroSpent: number;
+}
 interface Comment { id: string; content: string; createdAt: string; }
 interface TaskDetail {
   id: string; title: string; description: string | null; status: string;
   priority: string; category: string; dueDate: string | null;
+  pomodoroEstimate: number; pomodoroSpent: number;
   createdAt: string; updatedAt: string; subtasks: Subtask[]; comments: Comment[];
 }
 
@@ -22,6 +30,75 @@ interface Props {
   onUpdate: () => void;
 }
 
+// Compact pomodoro tracker: N tomatoes in a row, filled if spent, hollow if remaining
+function PomodoroTracker({
+  estimate,
+  spent,
+  onChangeEstimate,
+  onChangeSpent,
+  compact = false,
+}: {
+  estimate: number;
+  spent: number;
+  onChangeEstimate: (n: number) => void;
+  onChangeSpent: (n: number) => void;
+  compact?: boolean;
+}) {
+  const tomatoes = Math.max(estimate, spent);
+  const size = compact ? "text-sm" : "text-base";
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {tomatoes > 0 ? (
+        <div className="flex items-center gap-0.5">
+          {Array.from({ length: tomatoes }).map((_, i) => (
+            <span key={i} className={size} title={i < spent ? "Done" : "Remaining"}>
+              {i < spent ? "🍅" : "⚪"}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <span className="text-xs text-rose-muted">No estimate</span>
+      )}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onChangeEstimate(Math.max(0, estimate - 1))}
+          disabled={estimate === 0}
+          className="w-5 h-5 flex items-center justify-center rounded text-rose-muted hover:bg-rose-light hover:text-rose-deep disabled:opacity-30"
+          title="Giảm ước lượng"
+        >
+          <Minus className="w-3 h-3" />
+        </button>
+        <span className="text-xs text-rose-muted min-w-[36px] text-center">
+          {spent}/{estimate || "?"}
+        </span>
+        <button
+          onClick={() => onChangeEstimate(estimate + 1)}
+          className="w-5 h-5 flex items-center justify-center rounded text-rose-muted hover:bg-rose-light hover:text-rose-deep"
+          title="Tăng ước lượng"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+        <button
+          onClick={() => onChangeSpent(spent + 1)}
+          className="ml-2 text-xs px-2 py-0.5 rounded bg-rose-deep text-white hover:opacity-90"
+          title="Thêm 1 pomodoro đã hoàn thành"
+        >
+          +🍅
+        </button>
+        {spent > 0 && (
+          <button
+            onClick={() => onChangeSpent(Math.max(0, spent - 1))}
+            className="text-xs px-1.5 py-0.5 rounded text-rose-muted hover:text-rose-deep"
+            title="Bỏ 1"
+          >
+            −
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   const { projects } = useProjects();
   const [task, setTask] = useState<TaskDetail | null>(null);
@@ -29,6 +106,8 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   const [newComment, setNewComment] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
 
   const fetchTask = useCallback(async () => {
     if (!taskId) return;
@@ -45,6 +124,11 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
     fetchTask(); onUpdate();
   };
 
+  const updateSubtask = async (id: string, data: Record<string, unknown>) => {
+    await fetch(`/api/subtasks/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    fetchTask(); onUpdate();
+  };
+
   const addSubtask = async () => {
     if (!newSubtask.trim()) return;
     await fetch(`/api/tasks/${task.id}/subtasks`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newSubtask, order: task.subtasks.length }) });
@@ -52,7 +136,6 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   };
 
   const toggleSubtask = async (sub: Subtask) => {
-    // Server now handles parent task cascade in single transaction
     await fetch(`/api/subtasks/${sub.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -63,6 +146,19 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   };
 
   const deleteSubtask = async (id: string) => { await fetch(`/api/subtasks/${id}`, { method: "DELETE" }); fetchTask(); onUpdate(); };
+
+  const startEditSubtask = (sub: Subtask) => {
+    setEditingSubtaskId(sub.id);
+    setEditingSubtaskTitle(sub.title);
+  };
+
+  const saveEditSubtask = async () => {
+    if (editingSubtaskId && editingSubtaskTitle.trim()) {
+      await updateSubtask(editingSubtaskId, { title: editingSubtaskTitle.trim() });
+    }
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle("");
+  };
 
   const addComment = async () => {
     if (!newComment.trim()) return;
@@ -77,6 +173,11 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
   const doneCount = task.subtasks.filter((s) => s.done).length;
   const subtaskPct = task.subtasks.length > 0 ? Math.round((doneCount / task.subtasks.length) * 100) : 0;
   const proj = projects.find((p) => p.key === task.category);
+
+  // Aggregate pomodoro: task's own + all subtasks
+  const totalEstimate = task.pomodoroEstimate + task.subtasks.reduce((s, x) => s + x.pomodoroEstimate, 0);
+  const totalSpent = task.pomodoroSpent + task.subtasks.reduce((s, x) => s + x.pomodoroSpent, 0);
+  const pomodoroPct = totalEstimate > 0 ? Math.min(100, Math.round((totalSpent / totalEstimate) * 100)) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -136,6 +237,29 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
             </div>
           </div>
 
+          {/* Pomodoro tracking for task */}
+          <div className="p-3 rounded-lg bg-rose-light/40 border border-rose-border">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-rose-dark">🍅 Pomodoro (task chính)</h3>
+              {totalEstimate > 0 && (
+                <span className="text-xs text-rose-muted">
+                  Tổng {totalSpent}/{totalEstimate} · {pomodoroPct}%
+                </span>
+              )}
+            </div>
+            <PomodoroTracker
+              estimate={task.pomodoroEstimate}
+              spent={task.pomodoroSpent}
+              onChangeEstimate={(n) => { setTask({ ...task, pomodoroEstimate: n }); updateField({ pomodoroEstimate: n }); }}
+              onChangeSpent={(n) => { setTask({ ...task, pomodoroSpent: n }); updateField({ pomodoroSpent: n }); }}
+            />
+            {totalEstimate > 0 && (
+              <div className="w-full bg-white rounded-full h-1.5 mt-2 overflow-hidden">
+                <div className="bg-rose-deep h-1.5 rounded-full transition-all" style={{ width: `${pomodoroPct}%` }} />
+              </div>
+            )}
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-rose-dark flex items-center gap-2">
@@ -150,17 +274,60 @@ export default function TaskDetailPanel({ taskId, onClose, onUpdate }: Props) {
             )}
             <div className="space-y-1.5">
               {task.subtasks.map((sub) => (
-                <div key={sub.id} className="flex items-center gap-2 group p-1.5 rounded-lg hover:bg-rose-light transition">
-                  <button onClick={() => toggleSubtask(sub)} className="flex-shrink-0">
-                    {sub.done ? <CheckSquare className="w-4 h-4 text-rose-deep" /> : <Square className="w-4 h-4 text-rose-muted" />}
-                  </button>
-                  <span className={`text-sm flex-1 ${sub.done ? "line-through text-rose-muted" : "text-rose-dark"}`}>{sub.title}</span>
-                  <button onClick={() => deleteSubtask(sub.id)} className="opacity-0 group-hover:opacity-100 text-rose-muted hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                <div key={sub.id} className="group p-2 rounded-lg hover:bg-rose-light/40 transition border border-transparent hover:border-rose-border">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => toggleSubtask(sub)} className="flex-shrink-0">
+                      {sub.done ? <CheckSquare className="w-4 h-4 text-rose-deep" /> : <Square className="w-4 h-4 text-rose-muted" />}
+                    </button>
+                    {editingSubtaskId === sub.id ? (
+                      <input
+                        autoFocus
+                        value={editingSubtaskTitle}
+                        onChange={(e) => setEditingSubtaskTitle(e.target.value)}
+                        onBlur={saveEditSubtask}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveEditSubtask();
+                          if (e.key === "Escape") { setEditingSubtaskId(null); setEditingSubtaskTitle(""); }
+                        }}
+                        className="text-sm flex-1 border-b border-rose focus:outline-none bg-transparent text-rose-dark"
+                      />
+                    ) : (
+                      <span
+                        onClick={() => startEditSubtask(sub)}
+                        className={`text-sm flex-1 cursor-pointer hover:text-rose-deep ${sub.done ? "line-through text-rose-muted" : "text-rose-dark"}`}
+                        title="Click để sửa"
+                      >
+                        {sub.title}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => deleteSubtask(sub.id)}
+                      className="opacity-0 group-hover:opacity-100 text-rose-muted hover:text-red-400 transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="mt-1.5 ml-6">
+                    <PomodoroTracker
+                      compact
+                      estimate={sub.pomodoroEstimate}
+                      spent={sub.pomodoroSpent}
+                      onChangeEstimate={(n) => updateSubtask(sub.id, { pomodoroEstimate: n })}
+                      onChangeSpent={(n) => updateSubtask(sub.id, { pomodoroSpent: n })}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <input type="text" value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addSubtask(); }} placeholder="Add subtask..." className="flex-1 text-sm border border-rose-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose" />
+            <div className="flex items-center gap-2 mt-3">
+              <input
+                type="text"
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") addSubtask(); }}
+                placeholder="Add subtask..."
+                className="flex-1 text-sm border border-rose-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose"
+              />
               <button onClick={addSubtask} className="p-1.5 rounded-lg bg-rose-light text-rose-deep hover:bg-rose transition"><Plus className="w-4 h-4" /></button>
             </div>
           </div>

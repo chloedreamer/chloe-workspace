@@ -12,6 +12,8 @@ export async function PATCH(
   if (body.title !== undefined) data.title = body.title;
   if (body.done !== undefined) data.done = body.done;
   if (body.order !== undefined) data.order = body.order;
+  if (body.pomodoroEstimate !== undefined) data.pomodoroEstimate = Math.max(0, Number(body.pomodoroEstimate) || 0);
+  if (body.pomodoroSpent !== undefined) data.pomodoroSpent = Math.max(0, Number(body.pomodoroSpent) || 0);
 
   // Single transaction: update subtask + cascade parent task status
   const result = await prisma.$transaction(async (tx) => {

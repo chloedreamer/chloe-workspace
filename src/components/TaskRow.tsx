@@ -4,10 +4,14 @@ import { memo, useState } from "react";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 import type { Project } from "@/lib/constants";
 
-interface Subtask { id: string; title: string; done: boolean; }
+interface Subtask {
+  id: string; title: string; done: boolean;
+  pomodoroEstimate?: number; pomodoroSpent?: number;
+}
 interface Task {
   id: string; title: string; description: string | null; status: string;
   priority: string; category: string; dueDate: string | null;
+  pomodoroEstimate?: number; pomodoroSpent?: number;
   subtasks: Subtask[]; _count: { comments: number };
 }
 
@@ -27,6 +31,9 @@ function TaskRowImpl({ task, project, onMarkDone, onMarkInProgress, onSelect, on
   const [showSubs, setShowSubs] = useState(false);
   const doneS = task.subtasks.filter((s) => s.done).length;
   const totalS = task.subtasks.length;
+
+  const totalPomoEst = (task.pomodoroEstimate || 0) + task.subtasks.reduce((s, x) => s + (x.pomodoroEstimate || 0), 0);
+  const totalPomoSpent = (task.pomodoroSpent || 0) + task.subtasks.reduce((s, x) => s + (x.pomodoroSpent || 0), 0);
 
   return (
     <div>
@@ -56,6 +63,11 @@ function TaskRowImpl({ task, project, onMarkDone, onMarkInProgress, onSelect, on
               <button onClick={() => setShowSubs(!showSubs)} className="text-xs text-rose-muted hover:text-rose-deep">
                 {doneS}/{totalS}
               </button>
+            )}
+            {totalPomoEst > 0 && (
+              <span className="text-xs text-rose-muted" title="Pomodoro đã / ước lượng">
+                🍅 {totalPomoSpent}/{totalPomoEst}
+              </span>
             )}
           </div>
         </div>

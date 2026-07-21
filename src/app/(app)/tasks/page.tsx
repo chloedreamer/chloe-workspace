@@ -42,6 +42,7 @@ export default function TasksPage() {
     priority: "medium",
     category: "general",
     dueDate: "",
+    pomodoroEstimate: 0,
   });
   const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
   const [subtaskInput, setSubtaskInput] = useState("");
@@ -77,7 +78,7 @@ export default function TasksPage() {
         )
       );
     }
-    setForm({ title: "", description: "", status: "todo", priority: "medium", category: "general", dueDate: "" });
+    setForm({ title: "", description: "", status: "todo", priority: "medium", category: "general", dueDate: "", pomodoroEstimate: 0 });
     setNewSubtasks([]);
     setSubtaskInput("");
     setShowForm(false);
@@ -134,7 +135,7 @@ export default function TasksPage() {
             </select>
             <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-rose-muted pointer-events-none" />
           </div>
-          <button onClick={() => { setShowForm(true); setForm({ title: "", description: "", status: "todo", priority: "medium", category: "general", dueDate: "" }); }} className="flex items-center gap-2 bg-rose-deep text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+          <button onClick={() => { setShowForm(true); setForm({ title: "", description: "", status: "todo", priority: "medium", category: "general", dueDate: "", pomodoroEstimate: 0 }); }} className="flex items-center gap-2 bg-rose-deep text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
             <Plus className="w-4 h-4" /> New Task
           </button>
         </div>
@@ -175,6 +176,28 @@ export default function TasksPage() {
                 <div>
                   <label className="text-xs text-rose-muted mb-1 block">Due Date</label>
                   <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="w-full border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose" />
+                </div>
+              </div>
+              {/* Pomodoro estimate */}
+              <div>
+                <label className="text-xs text-rose-muted mb-1 block">🍅 Ước lượng Pomodoro (25 phút/quả)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={form.pomodoroEstimate}
+                    onChange={(e) => setForm({ ...form, pomodoroEstimate: Math.max(0, parseInt(e.target.value) || 0) })}
+                    className="w-20 border border-rose-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose"
+                  />
+                  <div className="flex items-center gap-0.5">
+                    {form.pomodoroEstimate > 0 && Array.from({ length: form.pomodoroEstimate }).map((_, i) => (
+                      <span key={i} className="text-sm">🍅</span>
+                    ))}
+                  </div>
+                  <span className="text-xs text-rose-muted ml-auto">
+                    {form.pomodoroEstimate > 0 && `~${form.pomodoroEstimate * 25} phút`}
+                  </span>
                 </div>
               </div>
               {/* Subtasks */}

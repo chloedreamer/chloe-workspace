@@ -31,6 +31,8 @@ export async function PATCH(
   if (body.priority !== undefined) data.priority = body.priority;
   if (body.category !== undefined) data.category = body.category;
   if (body.order !== undefined) data.order = body.order;
+  if (body.pomodoroEstimate !== undefined) data.pomodoroEstimate = Math.max(0, Number(body.pomodoroEstimate) || 0);
+  if (body.pomodoroSpent !== undefined) data.pomodoroSpent = Math.max(0, Number(body.pomodoroSpent) || 0);
   if (body.dueDate !== undefined)
     data.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 

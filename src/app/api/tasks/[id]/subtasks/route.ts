@@ -12,6 +12,7 @@ export async function POST(
       title: body.title,
       taskId: id,
       order: body.order || 0,
+      pomodoroEstimate: Math.max(0, Number(body.pomodoroEstimate) || 0),
     },
   });
   return NextResponse.json(subtask, { status: 201 });
